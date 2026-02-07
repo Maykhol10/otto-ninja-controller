@@ -575,8 +575,8 @@ body {
 /* Game Mode Sections */
 .game-mode-section {
     display: none;
-    grid-template-columns: 260px 260px;
-    gap: 16px;
+    grid-template-columns: 200px 200px 260px;
+    gap: 12px;
     width: 100%;
     animation: fadeIn 0.3s var(--transition-normal);
     align-items: stretch;
@@ -587,13 +587,22 @@ body {
     display: grid;
 }
 
-/* Left Panel: Sounds + Attacks */
-.left-panel {
+/* Left Panel: Sounds */
+.left-panel-sounds {
     display: flex;
     flex-direction: column;
-    gap: 12px;
     width: 100%;
-    max-width: 260px;
+    max-width: 200px;
+    flex-shrink: 0;
+    height: 100%;
+}
+
+/* Center Panel: Attacks */
+.center-panel-attacks {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 200px;
     flex-shrink: 0;
     height: 100%;
 }
@@ -1649,15 +1658,23 @@ body {
         gap: 16px;
     }
 
-    .left-panel {
+    .left-panel-sounds,
+    .center-panel-attacks {
         width: 100%;
         max-width: 280px;
+    }
+
+    .left-panel-sounds {
         order: -2;
+    }
+
+    .center-panel-attacks {
+        order: -1;
     }
 
     .right-panel {
         width: 100%;
-        order: -1;
+        order: 0;
     }
 
     .quick-sounds-container {
