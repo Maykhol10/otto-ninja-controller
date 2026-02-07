@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Otto Ninja Controller</string>
+    <string name="title_activity_main">Otto Ninja Controller</string>
+    <string name="package_name">com.ott.ninja.controller</string>
+    <string name="custom_url_scheme">com.ott.ninja.controller</string>
+</resources>
