@@ -457,10 +457,29 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto; /* Permitir scroll vertical si es necesario */
     max-height: calc(100vh - 120px); /* Ajustar para que quepa en pantalla */
     box-shadow: var(--shadow-sm);
     transition: all var(--transition-normal);
+}
+
+/* Custom scrollbar for card */
+.card::-webkit-scrollbar {
+    width: 6px;
+}
+
+.card::-webkit-scrollbar-track {
+    background: var(--bg-main);
+    border-radius: 3px;
+}
+
+.card::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+.card::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
 }
 
 .card:hover {

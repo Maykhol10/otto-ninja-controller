@@ -14,7 +14,17 @@
       "Bash(start npx serve . -l 8000)",
       "Bash(code:*)",
       "Bash(npx cap run android:*)",
-      "Bash(keytool:*)"
+      "Bash(keytool:*)",
+      "Bash(.gradlew.bat assembleDebug:*)",
+      "Bash(gradlew.bat assembleDebug:*)",
+      "Bash(ls:*)",
+      "Bash(./gradlew:*)",
+      "Bash(java:*)",
+      "Bash(where:*)",
+      "Bash(xcopy:*)",
+      "Bash(Copy-Item:*)",
+      "Bash(Copy-Item -Path styles.css -Destination www -Force)",
+      "Bash(cmd:*)"
     ]
   }
 }
