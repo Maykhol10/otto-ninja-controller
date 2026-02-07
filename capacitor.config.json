@@ -3,7 +3,7 @@
   "appName": "Otto Ninja Controller",
   "webDir": "www",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "http"
   },
   "android": {
     "orientation": "landscape"
