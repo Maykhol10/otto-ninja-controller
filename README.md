@@ -111,7 +111,7 @@ Edita `styles.css`:
 
 ## 📲 Generar APK Android
 
-Este proyecto usa **Capacitor** para generar una APK nativa de Android.
+Este proyecto usa **Capacitor 6** (versión estable) para generar una APK nativa de Android.
 
 ### Opción 1: Compilar Localmente
 

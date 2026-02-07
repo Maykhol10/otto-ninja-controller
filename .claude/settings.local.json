@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(git remote add:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(npm install:*)",
+      "Bash(npx cap init:*)",
+      "Bash(npx cap add:*)",
+      "Bash(copy:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npx cap sync:*)"
     ]
   }
 }
