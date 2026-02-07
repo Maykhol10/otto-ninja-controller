@@ -477,7 +477,7 @@ body {
 .card-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     margin-bottom: 16px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--divider);
@@ -486,12 +486,18 @@ body {
     align-self: center;
 }
 
+.card-header:has(.attacks-counter),
+.card-header:has(.sounds-counter) {
+    justify-content: space-between;
+}
+
 .card-title {
     font-size: 18px;
     font-weight: 600;
     color: var(--text-primary);
     letter-spacing: -0.02em;
     line-height: 1.2;
+    text-align: center;
 }
 
 /* ========== GAME CONTROLS PANEL (Joystick + Walk) ========== */
