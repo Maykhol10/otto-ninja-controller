@@ -38,7 +38,11 @@ out/
 
 # Capacitor
 .capacitor/
-android/
+# android/  # Comentado para permitir AndroidManifest.xml personalizado
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
 ios/
 *.keystore
 *.jks
