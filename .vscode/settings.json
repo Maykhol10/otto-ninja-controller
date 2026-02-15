@@ -1,0 +1,29 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "files.associations": {
+    "*.html": "html",
+    "*.css": "css",
+    "*.js": "javascript"
+  },
+  "emmet.includeLanguages": {
+    "html": "html",
+    "css": "css",
+    "javascript": "javascript"
+  },
+  "html.format.enable": true,
+  "css.format.enable": true,
+  "javascript.format.enable": true,
+  "liveServer.settings.port": 8000,
+  "liveServer.settings.root": "/",
+  "liveServer.settings.wait": 0,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/node_modules": true
+  },
+  "claudeCodeChat.permissions.yoloMode": false,
+  "java.configuration.updateBuildConfiguration": "interactive"
+}
