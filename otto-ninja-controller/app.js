@@ -8,7 +8,7 @@
 const state = {
     espIP: "",
     connected: false,
-    currentMode: "game-controls",
+    currentMode: "walk",
     currentOffsetLeft: 0,
     currentOffsetRight: 0,
     drawerOpen: false,
@@ -195,9 +195,18 @@ function switchGameMode(mode) {
     });
     document.getElementById(`mode-${mode}`)?.classList.add('active');
 
+    // Update state
+    state.currentMode = mode;
+
     if (elements.debugLog) {
         const modeName = mode === 'rotate' ? 'RODAR' : 'CAMINAR';
         addLog(`🎮 Modo: ${modeName}`);
+    }
+
+    // Enviar comando al ESP32
+    if (state.connected) {
+        const espMode = mode === 'rotate' ? 'rodar' : 'caminar';
+        setMode(espMode);
     }
 }
 
@@ -324,6 +333,19 @@ async function walk(cmd) {
     state.lastCommandTime.walk = now;
     addLog(`🚶 WALK: ${cmd}`);
     await sendRequest('walk', { cmd });
+}
+
+// ========== MODE ==========
+
+/**
+ * Send mode change command to ESP32
+ * @param {string} mode - 'rodar' or 'caminar'
+ */
+async function setMode(mode) {
+    if (!state.connected) return;
+
+    addLog(`🔄 Enviando modo: ${mode.toUpperCase()}`);
+    await sendRequest('mode', { cmd: mode });
 }
 
 // ========== ARMS ==========
