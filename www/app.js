@@ -160,7 +160,9 @@ async function sendRequest(endpoint, params = {}) {
     try {
         // AbortController para timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 segundos timeout
+        // Timeout variable según el endpoint (offset necesita más tiempo por Home())
+        const timeoutMs = (endpoint === 'offset') ? 5000 : 2000;
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
         const response = await fetch(url, {
             method: 'GET',
@@ -178,8 +180,8 @@ async function sendRequest(endpoint, params = {}) {
         return response.ok;
     } catch (error) {
         if (error.name === 'AbortError') {
-            // Mostrar timeout para endpoints críticos (HEAD, ARM)
-            if (endpoint === 'head' || endpoint === 'arms' || endpoint === 'walk') {
+            // Mostrar timeout para endpoints críticos (HEAD, ARM, OFFSET)
+            if (endpoint === 'head' || endpoint === 'arms' || endpoint === 'walk' || endpoint === 'offset') {
                 addLog(`⏱️ Timeout en ${endpoint.toUpperCase()} (ESP32 ocupado)`);
             }
         } else {
@@ -2190,7 +2192,10 @@ function updateOffsetDisplay(leg, value) {
 async function applyOffset(leg) {
     const value = leg === 'left' ? state.currentOffsetLeft : state.currentOffsetRight;
     addLog(`⚙️ OFFSET ${leg.toUpperCase()}: ${value}°`);
-    await sendRequest('offset', { [leg]: value });
+    const success = await sendRequest('offset', { [leg]: value });
+    if (!success) {
+        addLog(`⚠️ No se pudo aplicar el offset. Verifica la conexión.`);
+    }
 }
 
 /**
@@ -2198,10 +2203,13 @@ async function applyOffset(leg) {
  */
 async function applyBothOffsets() {
     addLog(`⚙️ OFFSETS: L=${state.currentOffsetLeft}° R=${state.currentOffsetRight}°`);
-    await sendRequest('offset', {
+    const success = await sendRequest('offset', {
         left: state.currentOffsetLeft,
         right: state.currentOffsetRight
     });
+    if (!success) {
+        addLog(`⚠️ No se pudieron aplicar los offsets. Verifica la conexión.`);
+    }
 }
 
 /**
