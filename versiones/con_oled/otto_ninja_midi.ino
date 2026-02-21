@@ -48,14 +48,14 @@ const int TRIG_PIN = 4;
 const int ECHO_PIN = 5;
 
 bool   usEnabled       = false;
-int    usDangerDist    = 15;    // cm — zona de peligro
-int    usAlertDist     = 40;    // cm — zona de alerta
+int    usDangerDist    = 15;
+int    usAlertDist     = 40;
 String usReaction      = "stop";
 bool   usBuzzerAlert   = false;
 bool   usDisplayAlert  = false;
 
 unsigned long usLastAutoRead = 0;
-const  unsigned long US_INTERVAL = 250; // ms entre lecturas automáticas
+const  unsigned long US_INTERVAL = 250;
 
 /* ================== SERVER Y MEMORIA ================== */
 WebServer server(80);
@@ -71,7 +71,7 @@ int spinTimeLB   = 190;   // Tiempo giro pie izquierdo (atrás)
 int spinTimeTR   = 150;   // Tiempo giro para girar derecha
 int spinTimeTL   = 150;   // Tiempo giro para girar izquierda
 int tiltTime     = 500;   // Milisegundos para estabilizar la inclinación
-int footSpeed    = 30;    // Velocidad del pie (1-90)
+int footSpeed    = 60;    // Velocidad del pie (1-90)
 int smoothDelay  = 10;    // Delay entre cada grado de movimiento suave
 
 const int leftLegHome  = 90;
@@ -134,7 +134,7 @@ void resetOffsets() {
   preferences.end();
 
   offsetLeftLeg  = 0;
-  offsetRightLeg = 0;                                                                                                                                                                                                                                                                           
+  offsetRightLeg = 0;
   Serial.println("=== OFFSETS RESETEADOS ===");
 }
 
@@ -553,8 +553,8 @@ long readDistanceCM() {
   digitalWrite(TRIG_PIN, HIGH);
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
-  long duration = pulseIn(ECHO_PIN, HIGH, 30000); // timeout 30ms ≈ ~5m
-  if (duration == 0) return -1;                   // sin eco = fuera de rango
+  long duration = pulseIn(ECHO_PIN, HIGH, 30000);
+  if (duration == 0) return -1;
   return duration / 29.0 / 2;                     // cm (29µs por cm, ida y vuelta)
 }
 
@@ -1056,7 +1056,7 @@ void setup() {
     server.send(204);
   });
 
-  // Recibe 768 bytes de bitmap (128x48) y los dibuja en la zona azul del OLED
+  // Recibe 1024 bytes de bitmap y los dibuja en el OLED
   server.on("/bitmap", HTTP_POST, []() {
     server.sendHeader("Access-Control-Allow-Origin", "*");
 
@@ -1067,7 +1067,7 @@ void setup() {
 
     String body = server.arg("plain");
 
-    // Buscar el array JSON: {"data":[b0,b1,...,b767]}
+    // Buscar el array JSON: {"data":[b0,b1,...,b1023]}
     int arrStart = body.indexOf('[');
     int arrEnd   = body.lastIndexOf(']');
     if (arrStart < 0 || arrEnd <= arrStart) {
@@ -1081,13 +1081,15 @@ void setup() {
     int len = arrStr.length();
 
     while (pos < len && byteCount < 768) {
+      // Saltar espacios
       while (pos < len && (arrStr[pos] == ' ' || arrStr[pos] == '\n' || arrStr[pos] == '\r')) pos++;
+      // Leer número
       int numStart = pos;
       while (pos < len && arrStr[pos] != ',' && arrStr[pos] != ']') pos++;
       if (pos > numStart) {
         receivedBitmap[byteCount++] = (uint8_t)arrStr.substring(numStart, pos).toInt();
       }
-      pos++;
+      pos++; // saltar la coma
     }
 
     if (byteCount != 768) {
@@ -1095,7 +1097,7 @@ void setup() {
       return;
     }
 
-    // Extraer título e inversión del JSON: {"title":"...","invert":...,"data":[...]}
+    // Extraer título del JSON: {"title":"...","invert":...,"data":[...]}
     String oledTitle = "Otto Ninja";
     int tStart = body.indexOf("\"title\"");
     if (tStart >= 0) {
@@ -1140,10 +1142,10 @@ void setup() {
       server.send(200, "application/json", json);
     }
     else if (action == "config") {
-      if (server.hasArg("enabled"))  usEnabled     = server.arg("enabled").toInt() == 1;
-      if (server.hasArg("danger"))   usDangerDist  = server.arg("danger").toInt();
-      if (server.hasArg("alert"))    usAlertDist   = server.arg("alert").toInt();
-      if (server.hasArg("reaction")) usReaction    = server.arg("reaction");
+      if (server.hasArg("enabled"))  usEnabled      = server.arg("enabled").toInt() == 1;
+      if (server.hasArg("danger"))   usDangerDist   = server.arg("danger").toInt();
+      if (server.hasArg("alert"))    usAlertDist    = server.arg("alert").toInt();
+      if (server.hasArg("reaction")) usReaction     = server.arg("reaction");
       if (server.hasArg("buzzer"))   usBuzzerAlert  = server.arg("buzzer").toInt() == 1;
       if (server.hasArg("display"))  usDisplayAlert = server.arg("display").toInt() == 1;
       Serial.print("US config: enabled="); Serial.print(usEnabled);

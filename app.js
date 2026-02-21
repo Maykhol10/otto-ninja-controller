@@ -259,6 +259,11 @@ function showPanel(panelId) {
         return;
     }
 
+    // Stop live ultrasonic polling when leaving the ultrasonic panel
+    if (state.currentMode === 'ultrasonic' && panelId !== 'ultrasonic') {
+        stopUltrasonicLive();
+    }
+
     elements.panels.forEach(panel => {
         if (panel) panel.classList.remove('active');
     });
@@ -274,6 +279,11 @@ function showPanel(panelId) {
 
     if (elements.debugLog) {
         addLog(`🎮 Panel: ${panelId.toUpperCase()}`);
+    }
+
+    // Start live ultrasonic polling when entering the ultrasonic panel
+    if (panelId === 'ultrasonic') {
+        startUltrasonicLive();
     }
 
     // Close drawer after selecting a panel
@@ -1166,7 +1176,10 @@ const bitmapState = {
     threshold: 128,
     invert: false,
     scale: 'fit',
-    byteArray: null
+    rotation: 0,
+    byteArray: null,
+    title: 'Otto Ninja',
+    titleInvert: false
 };
 
 function bitmapLoadFile(file) {
@@ -1179,8 +1192,8 @@ function bitmapLoadFile(file) {
             const origCanvas = document.getElementById('bitmapOriginalCanvas');
             if (origCanvas) {
                 const ctx = origCanvas.getContext('2d');
-                ctx.clearRect(0, 0, 128, 64);
-                ctx.drawImage(img, 0, 0, 128, 64);
+                ctx.clearRect(0, 0, 128, 48);
+                ctx.drawImage(img, 0, 0, 128, 48);
             }
             const workspace = document.getElementById('bitmapWorkspace');
             if (workspace) workspace.style.display = 'flex';
@@ -1193,7 +1206,7 @@ function bitmapLoadFile(file) {
 
 function bitmapRender() {
     if (!bitmapState.sourceImage) return;
-    const W = 128, H = 64;
+    const W = 128, H = 48;
     const offscreen = document.createElement('canvas');
     offscreen.width = W; offscreen.height = H;
     const octx = offscreen.getContext('2d');
@@ -1201,17 +1214,33 @@ function bitmapRender() {
     octx.fillRect(0, 0, W, H);
 
     const img = bitmapState.sourceImage;
+    const rot = bitmapState.rotation;
+
+    // Para rotaciones 90/270 el ancho y alto de la imagen original se invierten
+    const imgW = (rot === 90 || rot === 270) ? img.height : img.width;
+    const imgH = (rot === 90 || rot === 270) ? img.width  : img.height;
+
     let dx = 0, dy = 0, dw = W, dh = H;
     if (bitmapState.scale === 'fit') {
-        const r = Math.min(W / img.width, H / img.height);
-        dw = Math.round(img.width * r); dh = Math.round(img.height * r);
+        const r = Math.min(W / imgW, H / imgH);
+        dw = Math.round(imgW * r); dh = Math.round(imgH * r);
         dx = Math.round((W - dw) / 2);  dy = Math.round((H - dh) / 2);
     } else if (bitmapState.scale === 'fill') {
-        const r = Math.max(W / img.width, H / img.height);
-        dw = Math.round(img.width * r); dh = Math.round(img.height * r);
+        const r = Math.max(W / imgW, H / imgH);
+        dw = Math.round(imgW * r); dh = Math.round(imgH * r);
         dx = Math.round((W - dw) / 2);  dy = Math.round((H - dh) / 2);
     }
-    octx.drawImage(img, dx, dy, dw, dh);
+
+    octx.save();
+    octx.translate(W / 2, H / 2);
+    octx.rotate(rot * Math.PI / 180);
+    // Para 90/270 los ejes dw/dh quedan invertidos respecto al canvas final
+    if (rot === 90 || rot === 270) {
+        octx.drawImage(img, -dh / 2 + (dy - H / 2 + dh / 2), -dw / 2 + (dx - W / 2 + dw / 2), dh, dw);
+    } else {
+        octx.drawImage(img, dx - W / 2, dy - H / 2, dw, dh);
+    }
+    octx.restore();
 
     const pixels = octx.getImageData(0, 0, W, H).data;
     const BPR = W / 8;
@@ -1235,17 +1264,43 @@ function bitmapRender() {
     const previewCanvas = document.getElementById('bitmapPreviewCanvas');
     if (previewCanvas) {
         const pctx = previewCanvas.getContext('2d');
-        const pd = pctx.createImageData(W, H);
+        // Canvas es 128×64: 16px zona amarilla + 48px zona azul
+        const PW = 128, PH = 64, TITLE_H = 16;
+        const pd = pctx.createImageData(PW, PH);
+
+        const titleInv = bitmapState.titleInvert;
+
+        // Zona amarilla (filas 0-15): normal=fondo oscuro dorado / invertido=fondo dorado claro
+        for (let y = 0; y < TITLE_H; y++) {
+            for (let x = 0; x < PW; x++) {
+                const idx = (y * PW + x) * 4;
+                if (titleInv) {
+                    pd.data[idx]   = 255; pd.data[idx+1] = 215; pd.data[idx+2] = 0;
+                } else {
+                    pd.data[idx]   = 40;  pd.data[idx+1] = 32;  pd.data[idx+2] = 0;
+                }
+                pd.data[idx+3] = 255;
+            }
+        }
+        // Zona azul (filas 16-63): pixels del bitmap
         for (let y = 0; y < H; y++) {
             for (let x = 0; x < W; x++) {
                 const on = (bytes[y * BPR + Math.floor(x / 8)] >> (7 - (x % 8))) & 1;
-                const c = on ? 255 : 0;
-                const idx = (y * W + x) * 4;
-                pd.data[idx] = c; pd.data[idx+1] = c;
-                pd.data[idx+2] = c; pd.data[idx+3] = 255;
+                const idx = ((y + TITLE_H) * PW + x) * 4;
+                pd.data[idx]   = on ? 0   : 0;
+                pd.data[idx+1] = on ? 140 : 0;
+                pd.data[idx+2] = on ? 255 : 18;
+                pd.data[idx+3] = 255;
             }
         }
         pctx.putImageData(pd, 0, 0);
+
+        // Texto del título en zona amarilla (invertido: texto oscuro sobre fondo dorado)
+        pctx.fillStyle = titleInv ? '#1a1200' : '#FFD700';
+        pctx.font = 'bold 9px monospace';
+        pctx.textAlign = 'center';
+        pctx.textBaseline = 'middle';
+        pctx.fillText(bitmapState.title || 'Otto Ninja', PW / 2, TITLE_H / 2);
     }
 
     bitmapGenerateCCode(bytes);
@@ -1254,16 +1309,16 @@ function bitmapRender() {
 function bitmapGenerateCCode(bytes) {
     const BPR = 16;
     const lines = [
-        '// 128x64 OLED bitmap — generado por Otto Ninja Controller',
-        '// Uso: display.drawBitmap(0, 0, ottoBitmap, 128, 64, WHITE);',
+        '// 128x48 OLED bitmap — generado por Otto Ninja Controller',
+        '// Uso: display.drawBitmap(0, 16, ottoBitmap, 128, 48, WHITE);',
         'const uint8_t PROGMEM ottoBitmap[] = {'
     ];
-    for (let row = 0; row < 64; row++) {
+    for (let row = 0; row < 48; row++) {
         const hex = [];
         for (let col = 0; col < BPR; col++) {
             hex.push('0x' + bytes[row * BPR + col].toString(16).padStart(2, '0').toUpperCase());
         }
-        lines.push('    ' + hex.join(', ') + (row < 63 ? ',' : ''));
+        lines.push('    ' + hex.join(', ') + (row < 47 ? ',' : ''));
     }
     lines.push('};');
     const code = lines.join('\n');
@@ -1301,7 +1356,7 @@ async function bitmapSendToESP32() {
             method: 'POST',
             mode: 'cors',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: Array.from(bitmapState.byteArray) }),
+            body: JSON.stringify({ title: bitmapState.title || 'Otto Ninja', invert: bitmapState.invert, titleInvert: bitmapState.titleInvert, data: Array.from(bitmapState.byteArray) }),
             signal: controller.signal
         });
         clearTimeout(tid);
@@ -1326,6 +1381,8 @@ function initBitmapPanel() {
     const threshold = document.getElementById('bitmapThreshold');
     const threshVal = document.getElementById('bitmapThresholdValue');
     const invertChk = document.getElementById('bitmapInvert');
+    const titleInput      = document.getElementById('bitmapTitle');
+    const titleInvertChk  = document.getElementById('bitmapTitleInvert');
     const copyBtn   = document.getElementById('bitmapCopyCode');
     const sendBtn   = document.getElementById('bitmapSendBtn');
 
@@ -1347,12 +1404,22 @@ function initBitmapPanel() {
         bitmapRender();
     });
     if (invertChk) invertChk.addEventListener('change', () => { bitmapState.invert = invertChk.checked; bitmapRender(); });
+    if (titleInput)     titleInput.addEventListener('input', () => { bitmapState.title = titleInput.value; bitmapRender(); });
+    if (titleInvertChk) titleInvertChk.addEventListener('change', () => { bitmapState.titleInvert = titleInvertChk.checked; bitmapRender(); });
 
     document.querySelectorAll('.bitmap-scale-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.bitmap-scale-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             bitmapState.scale = btn.dataset.scale;
+            bitmapRender();
+        });
+    });
+    document.querySelectorAll('.bitmap-rotate-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.bitmap-rotate-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            bitmapState.rotation = parseInt(btn.dataset.rotation);
             bitmapRender();
         });
     });
@@ -1515,25 +1582,22 @@ const usState = {
     testReadings: [],
     testMaxReadings: 30,
     displayAlert: false,
-    lastDistance: null
+    lastDistance: null,
+    // Live polling
+    liveInterval: null
 };
 
 /**
- * Read current distance from the ultrasonic sensor
+ * Fetch one distance reading and update the UI
  */
-async function readUltrasonicDistance() {
-    const btn = document.getElementById('usReadBtn');
-    if (btn) { btn.classList.add('loading'); btn.textContent = 'Midiendo...'; }
-
+async function fetchUltrasonicLive() {
     if (!state.connected || !state.espIP) {
         updateUltrasonicDisplay(null, 'Sin conexión');
-        if (btn) { btn.classList.remove('loading'); btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><path d="M3 3l4 4M21 3l-4 4M3 21l4-4M21 21l-4-4"/></svg> Medir ahora'; }
         return;
     }
-
     try {
         const url = `http://${state.espIP}/ultrasonic?action=read`;
-        const resp = await fetch(url, { signal: AbortSignal.timeout(3000) });
+        const resp = await fetch(url, { signal: AbortSignal.timeout(2000) });
         if (resp.ok) {
             const data = await resp.json();
             const dist = parseInt(data.distance);
@@ -1545,11 +1609,33 @@ async function readUltrasonicDistance() {
     } catch (e) {
         updateUltrasonicDisplay(null, 'Sin respuesta');
     }
+}
 
-    if (btn) {
-        btn.classList.remove('loading');
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><path d="M3 3l4 4M21 3l-4 4M3 21l4-4M21 21l-4-4"/></svg> Medir ahora';
+/**
+ * Start automatic live distance polling (every 500 ms)
+ */
+function startUltrasonicLive() {
+    if (usState.liveInterval) return;
+    const dot   = document.getElementById('usLiveDot');
+    const label = document.getElementById('usLiveLabel');
+    if (dot)   dot.className   = 'us-live-dot active';
+    if (label) label.textContent = 'En vivo';
+    fetchUltrasonicLive(); // immediate first read
+    usState.liveInterval = setInterval(fetchUltrasonicLive, 500);
+}
+
+/**
+ * Stop live distance polling
+ */
+function stopUltrasonicLive() {
+    if (usState.liveInterval) {
+        clearInterval(usState.liveInterval);
+        usState.liveInterval = null;
     }
+    const dot   = document.getElementById('usLiveDot');
+    const label = document.getElementById('usLiveLabel');
+    if (dot)   dot.className   = 'us-live-dot';
+    if (label) label.textContent = 'Pausado';
 }
 
 /**
@@ -1866,10 +1952,6 @@ function initUltrasonicPanel() {
     const displayChk = document.getElementById('usDisplayAlert');
     if (buzzerChk)  buzzerChk.addEventListener('change',  () => { usState.buzzerAlert  = buzzerChk.checked; });
     if (displayChk) displayChk.addEventListener('change', () => { usState.displayAlert = displayChk.checked; });
-
-    // Read button
-    const readBtn = document.getElementById('usReadBtn');
-    if (readBtn) readBtn.addEventListener('click', readUltrasonicDistance);
 
     // Apply button
     const applyBtn = document.getElementById('usApplyBtn');

@@ -871,11 +871,23 @@
                         <!-- Workspace (hidden until image loaded) -->
                         <div class="bitmap-workspace" id="bitmapWorkspace" style="display:none">
 
+                            <!-- Título OLED -->
+                            <div class="bitmap-title-row">
+                                <label class="bitmap-title-label">Título (zona amarilla)</label>
+                                <input type="text" id="bitmapTitle" class="bitmap-title-input"
+                                       maxlength="20" placeholder="Otto Ninja" value="Otto Ninja">
+                                <label class="bitmap-title-invert-toggle">
+                                    <input type="checkbox" id="bitmapTitleInvert">
+                                    <span class="bitmap-toggle-track bitmap-toggle-track-gold"><span class="bitmap-toggle-thumb"></span></span>
+                                    <span class="bitmap-title-invert-label">Invertir</span>
+                                </label>
+                            </div>
+
                             <!-- Previews -->
                             <div class="bitmap-previews">
                                 <div class="bitmap-preview-block">
                                     <span class="bitmap-preview-label">Original</span>
-                                    <canvas id="bitmapOriginalCanvas" width="128" height="64" class="bitmap-canvas bitmap-canvas-original"></canvas>
+                                    <canvas id="bitmapOriginalCanvas" width="128" height="48" class="bitmap-canvas bitmap-canvas-original"></canvas>
                                 </div>
                                 <div class="bitmap-preview-block">
                                     <span class="bitmap-preview-label">Preview OLED (128×64)</span>
@@ -990,13 +1002,10 @@
                             </div>
                         </div>
                         <div class="us-status-badge" id="usStatusBadge">Sin lectura</div>
-                        <button class="us-read-btn" id="usReadBtn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                                <circle cx="11" cy="11" r="8"/>
-                                <path d="M3 3l4 4M21 3l-4 4M3 21l4-4M21 21l-4-4"/>
-                            </svg>
-                            Medir ahora
-                        </button>
+                        <div class="us-live-indicator" id="usLiveIndicator">
+                            <span class="us-live-dot" id="usLiveDot"></span>
+                            <span class="us-live-label" id="usLiveLabel">Conectando...</span>
+                        </div>
                     </div>
 
                     <!-- Zonas de detección -->

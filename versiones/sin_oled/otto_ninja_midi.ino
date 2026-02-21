@@ -2,9 +2,6 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <Preferences.h>
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
 #include "melodias.h"
 
 /* ================== WIFI ================== */
@@ -28,35 +25,6 @@ const int pinHead      = 33;
 const int BuzzerPin = 32;
 Melodias buzzer(BuzzerPin);
 
-/* ================== OLED DISPLAY ================== */
-#define SCREEN_WIDTH  128
-#define SCREEN_HEIGHT  64
-#define OLED_RESET     -1
-#define OLED_ADDRESS 0x3C   // Cambia a 0x3D si tu pantalla lo requiere
-// Pines I2C por defecto en ESP32: SDA=21, SCL=22
-
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-bool oledAvailable = false;
-String lastDisplayMessage = "";
-
-// Buffer para bitmap recibido desde la app (128x48 / 8 = 768 bytes — zona azul del OLED)
-static uint8_t receivedBitmap[768];
-bool bitmapActive = false;
-
-/* ================== SENSOR ULTRASÓNICO HC-SR04 ================== */
-const int TRIG_PIN = 4;
-const int ECHO_PIN = 5;
-
-bool   usEnabled       = false;
-int    usDangerDist    = 15;    // cm — zona de peligro
-int    usAlertDist     = 40;    // cm — zona de alerta
-String usReaction      = "stop";
-bool   usBuzzerAlert   = false;
-bool   usDisplayAlert  = false;
-
-unsigned long usLastAutoRead = 0;
-const  unsigned long US_INTERVAL = 250; // ms entre lecturas automáticas
-
 /* ================== SERVER Y MEMORIA ================== */
 WebServer server(80);
 Preferences preferences;
@@ -71,7 +39,7 @@ int spinTimeLB   = 190;   // Tiempo giro pie izquierdo (atrás)
 int spinTimeTR   = 150;   // Tiempo giro para girar derecha
 int spinTimeTL   = 150;   // Tiempo giro para girar izquierda
 int tiltTime     = 500;   // Milisegundos para estabilizar la inclinación
-int footSpeed    = 30;    // Velocidad del pie (1-90)
+int footSpeed    = 60;    // Velocidad del pie (1-90)
 int smoothDelay  = 10;    // Delay entre cada grado de movimiento suave
 
 const int leftLegHome  = 90;
@@ -134,7 +102,7 @@ void resetOffsets() {
   preferences.end();
 
   offsetLeftLeg  = 0;
-  offsetRightLeg = 0;                                                                                                                                                                                                                                                                           
+  offsetRightLeg = 0;
   Serial.println("=== OFFSETS RESETEADOS ===");
 }
 
@@ -258,13 +226,11 @@ int parseMelodyData(String data, uint16_t* notes, int maxNotes) {
   int startIdx = 0;
 
   while (startIdx < data.length() && noteCount < maxNotes) {
-    // Buscar el separador de nota ';' o fin de string
     int endIdx = data.indexOf(';', startIdx);
     if (endIdx == -1) endIdx = data.length();
 
     String notePair = data.substring(startIdx, endIdx);
 
-    // Buscar separador freq,dur
     int commaIdx = notePair.indexOf(',');
     if (commaIdx > 0) {
       uint16_t freq = notePair.substring(0, commaIdx).toInt();
@@ -475,135 +441,6 @@ void LookCenter() {
   Head.write(90);
 }
 
-/* ================== OLED - FUNCIONES ================== */
-
-void oledSplash() {
-  if (!oledAvailable) return;
-  display.clearDisplay();
-  display.setTextColor(SSD1306_WHITE);
-  display.setTextSize(2);
-  display.setCursor(10, 10);
-  display.println("  Otto");
-  display.setCursor(10, 32);
-  display.println("  Ninja");
-  display.display();
-}
-
-void oledShowIP(String ip) {
-  if (!oledAvailable) return;
-  display.clearDisplay();
-  display.setTextColor(SSD1306_WHITE);
-  display.setTextSize(1);
-  display.setCursor(0, 0);
-  display.println("Otto Ninja - Online");
-  display.drawLine(0, 10, SCREEN_WIDTH - 1, 10, SSD1306_WHITE);
-  display.setCursor(0, 18);
-  display.println("IP:");
-  display.setTextSize(1);
-  display.setCursor(0, 30);
-  display.println(ip);
-  display.setCursor(0, 50);
-  display.println("Listo para controlar");
-  display.display();
-}
-
-void displayMessage(String msg) {
-  if (!oledAvailable) return;
-  lastDisplayMessage = msg;
-
-  display.clearDisplay();
-  display.setTextColor(SSD1306_WHITE);
-
-  // Cabecera
-  display.setTextSize(1);
-  display.setCursor(0, 0);
-  display.print("Mensaje:");
-  display.drawLine(0, 10, SCREEN_WIDTH - 1, 10, SSD1306_WHITE);
-
-  // Cuerpo del mensaje
-  display.setCursor(0, 16);
-
-  // Tamaño grande para textos cortos, pequeño para largos
-  if (msg.length() <= 9) {
-    display.setTextSize(2);
-  } else if (msg.length() <= 20) {
-    display.setTextSize(1);
-  } else {
-    // Texto largo: partir en líneas de ~21 caracteres
-    display.setTextSize(1);
-  }
-
-  display.println(msg);
-  display.display();
-
-  Serial.println("OLED Display: " + msg);
-}
-
-void displayClear() {
-  if (!oledAvailable) return;
-  lastDisplayMessage = "";
-  oledShowIP(WiFi.localIP().toString());
-}
-
-/* ================== SENSOR ULTRASÓNICO - FUNCIONES ================== */
-
-long readDistanceCM() {
-  digitalWrite(TRIG_PIN, LOW);
-  delayMicroseconds(2);
-  digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_PIN, LOW);
-  long duration = pulseIn(ECHO_PIN, HIGH, 30000); // timeout 30ms ≈ ~5m
-  if (duration == 0) return -1;                   // sin eco = fuera de rango
-  return duration / 29.0 / 2;                     // cm (29µs por cm, ida y vuelta)
-}
-
-void processUltrasonic() {
-  unsigned long now = millis();
-  if (now - usLastAutoRead < US_INTERVAL) return;
-  usLastAutoRead = now;
-
-  long dist = readDistanceCM();
-
-  if (dist < 0 || !usEnabled) return;
-
-  // Reacciones y alertas (solo si monitoring está habilitado)
-  if (dist <= usDangerDist) {
-    if (usBuzzerAlert) buzzer.sing(1);
-    if (usDisplayAlert && oledAvailable) {
-      display.clearDisplay();
-      display.setTextSize(2);
-      display.setTextColor(SSD1306_WHITE);
-      display.setCursor(10, 0);
-      display.println("PELIGRO!");
-      display.setTextSize(1);
-      display.setCursor(0, 32);
-      display.print(dist); display.println(" cm");
-      display.display();
-    }
-    if (usReaction == "stop") {
-      endTask();
-      footStop(LeftFoot);
-      footStop(RightFoot);
-    } else if (usReaction == "back") {
-      endTask();
-      startTask("walk_backward");
-    }
-  } else if (dist <= usAlertDist) {
-    if (usDisplayAlert && oledAvailable) {
-      display.clearDisplay();
-      display.setTextSize(1);
-      display.setTextColor(SSD1306_WHITE);
-      display.setCursor(0, 0);
-      display.println("Alerta:");
-      display.setTextSize(2);
-      display.setCursor(0, 16);
-      display.print(dist); display.println(" cm");
-      display.display();
-    }
-  }
-}
-
 /* ================== SCHEDULER DE TAREAS ================== */
 
 void startTask(String task) {
@@ -754,22 +591,6 @@ void setup() {
   Serial.begin(115200);
   Serial.println("\n\n=== INICIANDO OTTO NINJA ===");
 
-  // Inicializar sensor ultrasónico
-  pinMode(TRIG_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
-  Serial.println("Sensor ultrasonico: OK (TRIG=4, ECHO=5)");
-
-  // Inicializar OLED (SDA=21, SCL=22 por defecto en ESP32)
-  Wire.begin();
-  if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
-    Serial.println("OLED: No encontrada, continuando sin display");
-    oledAvailable = false;
-  } else {
-    oledAvailable = true;
-    Serial.println("OLED: OK");
-    oledSplash();
-  }
-
   loadOffsets();
   loadAllCustomMelodies();
   Home();
@@ -777,9 +598,6 @@ void setup() {
 
   connectWiFi();
   buzzer.sing(11);
-
-  // Mostrar IP en el display al conectar
-  oledShowIP(WiFi.localIP().toString());
 
   /* ========== RUTAS HTTP ========== */
 
@@ -878,17 +696,14 @@ void setup() {
     }
     int songNumber = server.arg("song").toInt();
 
-    // Melodias predefinidas (0-15)
     if (songNumber >= 0 && songNumber <= 15) {
       server.send(200, "text/plain", "OK");
       buzzer.sing(songNumber);
     }
-    // Melodias personalizadas (16-20)
     else if (songNumber >= CUSTOM_MELODY_START && songNumber < CUSTOM_MELODY_START + MAX_CUSTOM_MELODIES) {
       server.send(200, "text/plain", "OK");
       playCustomMelody(songNumber);
     }
-    // Tono personalizado
     else if (songNumber == 99) {
       int freq     = server.arg("freq").toInt();
       int duration = server.arg("duration").toInt();
@@ -903,13 +718,11 @@ void setup() {
     }
   });
 
-  // ==================== MELODÍAS PERSONALIZADAS ====================
   server.on("/melody", HTTP_GET, []() {
     server.sendHeader("Access-Control-Allow-Origin", "*");
 
     String action = server.arg("action");
 
-    // === GUARDAR MELODÍA ===
     if (action == "save") {
       int slot = server.arg("slot").toInt();
       String name = server.arg("name");
@@ -924,7 +737,7 @@ void setup() {
         return;
       }
 
-      uint16_t notes[200]; // max 100 notas x 2 valores
+      uint16_t notes[200];
       int noteCount = parseMelodyData(data, notes, MAX_NOTES_PER_MELODY);
 
       if (noteCount == 0) {
@@ -935,8 +748,6 @@ void setup() {
       saveCustomMelody(slot, name.c_str(), notes, noteCount);
       server.send(200, "text/plain", "Saved: " + name + " (" + String(noteCount) + " notes)");
     }
-
-    // === LISTAR MELODÍAS ===
     else if (action == "list") {
       String json = "{\"melodies\":[";
       bool first = true;
@@ -952,8 +763,6 @@ void setup() {
       json += "]}";
       server.send(200, "application/json", json);
     }
-
-    // === OBTENER MELODÍA ===
     else if (action == "get") {
       int slot = server.arg("slot").toInt();
       int index = slot - CUSTOM_MELODY_START;
@@ -974,8 +783,6 @@ void setup() {
       json += "]}";
       server.send(200, "application/json", json);
     }
-
-    // === ELIMINAR MELODÍA ===
     else if (action == "delete") {
       int slot = server.arg("slot").toInt();
       if (slot < CUSTOM_MELODY_START || slot >= CUSTOM_MELODY_START + MAX_CUSTOM_MELODIES) {
@@ -985,37 +792,9 @@ void setup() {
       deleteCustomMelody(slot);
       server.send(200, "text/plain", "Deleted slot " + String(slot));
     }
-
     else {
       server.send(400, "text/plain", "Invalid action");
     }
-  });
-
-  // ==================== DISPLAY OLED ====================
-  server.on("/message", HTTP_GET, []() {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-
-    if (!server.hasArg("text")) {
-      server.send(400, "text/plain", "Missing 'text' parameter");
-      return;
-    }
-
-    String msg = server.arg("text");
-    msg.trim();
-
-    if (msg.length() == 0) {
-      server.send(400, "text/plain", "Empty message");
-      return;
-    }
-
-    if (msg == "clear") {
-      displayClear();
-      server.send(200, "text/plain", "Display cleared");
-      return;
-    }
-
-    displayMessage(msg);
-    server.send(200, "text/plain", "OK");
   });
 
   server.on("/offset", HTTP_GET, []() {
@@ -1047,115 +826,6 @@ void setup() {
     server.send(200, "text/plain", "Offsets reseteados");
   });
 
-  // ==================== BITMAP OLED ====================
-  // CORS preflight — el navegador lo envía antes del POST con Content-Type: application/json
-  server.on("/bitmap", HTTP_OPTIONS, []() {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.sendHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-    server.sendHeader("Access-Control-Allow-Headers", "Content-Type");
-    server.send(204);
-  });
-
-  // Recibe 768 bytes de bitmap (128x48) y los dibuja en la zona azul del OLED
-  server.on("/bitmap", HTTP_POST, []() {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-
-    if (!oledAvailable) {
-      server.send(503, "text/plain", "OLED no disponible");
-      return;
-    }
-
-    String body = server.arg("plain");
-
-    // Buscar el array JSON: {"data":[b0,b1,...,b767]}
-    int arrStart = body.indexOf('[');
-    int arrEnd   = body.lastIndexOf(']');
-    if (arrStart < 0 || arrEnd <= arrStart) {
-      server.send(400, "text/plain", "JSON invalido");
-      return;
-    }
-
-    String arrStr = body.substring(arrStart + 1, arrEnd);
-    int byteCount = 0;
-    int pos = 0;
-    int len = arrStr.length();
-
-    while (pos < len && byteCount < 768) {
-      while (pos < len && (arrStr[pos] == ' ' || arrStr[pos] == '\n' || arrStr[pos] == '\r')) pos++;
-      int numStart = pos;
-      while (pos < len && arrStr[pos] != ',' && arrStr[pos] != ']') pos++;
-      if (pos > numStart) {
-        receivedBitmap[byteCount++] = (uint8_t)arrStr.substring(numStart, pos).toInt();
-      }
-      pos++;
-    }
-
-    if (byteCount != 768) {
-      server.send(400, "text/plain", "Se esperaban 768 bytes, recibidos: " + String(byteCount));
-      return;
-    }
-
-    // Extraer título e inversión del JSON: {"title":"...","invert":...,"data":[...]}
-    String oledTitle = "Otto Ninja";
-    int tStart = body.indexOf("\"title\"");
-    if (tStart >= 0) {
-      int q1 = body.indexOf('"', tStart + 7);
-      int q2 = body.indexOf('"', q1 + 1);
-      if (q1 >= 0 && q2 > q1) {
-        oledTitle = body.substring(q1 + 1, q2);
-        if (oledTitle.length() == 0) oledTitle = "Otto Ninja";
-      }
-    }
-    bool oledTitleInvert = (body.indexOf("\"titleInvert\":true") >= 0);
-
-    display.clearDisplay();
-    // Zona amarilla (filas 0-15): título personalizado centrado
-    display.setTextSize(1);
-    int titleX = max(0, (128 - (int)oledTitle.length() * 6) / 2);
-    if (oledTitleInvert) {
-      display.fillRect(0, 0, 128, 16, SSD1306_WHITE);
-      display.setTextColor(SSD1306_BLACK);
-    } else {
-      display.setTextColor(SSD1306_WHITE);
-    }
-    display.setCursor(titleX, 4);
-    display.print(oledTitle);
-    // Zona azul (filas 16-63): imagen 128x48
-    display.drawBitmap(0, 16, receivedBitmap, 128, 48, SSD1306_WHITE);
-    display.display();
-    bitmapActive = true;
-
-    Serial.print("OLED: bitmap con titulo '"); Serial.print(oledTitle); Serial.println("'");
-    server.send(200, "text/plain", "OK");
-  });
-
-  // ==================== SENSOR ULTRASÓNICO ====================
-  server.on("/ultrasonic", HTTP_GET, []() {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    String action = server.arg("action");
-
-    if (action == "read") {
-      long dist = readDistanceCM();
-      String json = "{\"distance\":" + String(dist) + "}";
-      server.send(200, "application/json", json);
-    }
-    else if (action == "config") {
-      if (server.hasArg("enabled"))  usEnabled     = server.arg("enabled").toInt() == 1;
-      if (server.hasArg("danger"))   usDangerDist  = server.arg("danger").toInt();
-      if (server.hasArg("alert"))    usAlertDist   = server.arg("alert").toInt();
-      if (server.hasArg("reaction")) usReaction    = server.arg("reaction");
-      if (server.hasArg("buzzer"))   usBuzzerAlert  = server.arg("buzzer").toInt() == 1;
-      if (server.hasArg("display"))  usDisplayAlert = server.arg("display").toInt() == 1;
-      Serial.print("US config: enabled="); Serial.print(usEnabled);
-      Serial.print(" danger=");  Serial.print(usDangerDist);
-      Serial.print(" alert=");   Serial.println(usAlertDist);
-      server.send(200, "text/plain", "OK");
-    }
-    else {
-      server.send(400, "text/plain", "Accion invalida");
-    }
-  });
-
   server.begin();
   Serial.println("Servidor HTTP iniciado\n");
 }
@@ -1163,6 +833,5 @@ void setup() {
 void loop() {
   server.handleClient();
   processTask();
-  processUltrasonic();
   yield();
 }
