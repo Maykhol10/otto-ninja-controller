@@ -1,0 +1,56 @@
+# Dependencias
+node_modules/
+package-lock.json
+yarn.lock
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Archivos temporales
+.tmp/
+temp/
+*.tmp
+
+# Archivos de build
+dist/
+build/
+out/
+
+# Capacitor
+.capacitor/
+# android/  # Comentado para permitir AndroidManifest.xml personalizado
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+ios/
+*.keystore
+*.jks
+
+# APK generadas
+*.apk
+*.aab
+# Keystore files - NEVER commit these!
+*.keystore
+*.jks
+release-signing.properties

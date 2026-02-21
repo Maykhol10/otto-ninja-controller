@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git remote add:*)",
+      "Bash(git add:*)",
+      "Bash(npm install:*)",
+      "Bash(npx cap init:*)",
+      "Bash(npx cap add:*)",
+      "Bash(copy:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npx cap sync:*)",
+      "Bash(start npx serve . -l 8000)",
+      "Bash(code:*)",
+      "Bash(npx cap run android:*)",
+      "Bash(keytool:*)",
+      "Bash(.gradlew.bat assembleDebug:*)",
+      "Bash(gradlew.bat assembleDebug:*)",
+      "Bash(ls:*)",
+      "Bash(./gradlew:*)",
+      "Bash(java:*)",
+      "Bash(where:*)",
+      "Bash(xcopy:*)",
+      "Bash(Copy-Item:*)",
+      "Bash(Copy-Item -Path styles.css -Destination www -Force)",
+      "Bash(cmd:*)",
+      "Bash(git checkout:*)"
+    ]
+  }
+}
