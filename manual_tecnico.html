@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manual Técnico – Otto Ninja Pro Controller</title>
+  <style>
+    /* ─── RESET ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ─── VARIABLES ─── */
+    :root {
+      --blue:      #0055CC;
+      --blue-dark: #003B8E;
+      --blue-light:#E8F0FE;
+      --accent:    #FF3B30;
+      --green:     #34C759;
+      --yellow:    #FF9500;
+      --gray-50:   #F8F9FA;
+      --gray-100:  #F1F3F4;
+      --gray-200:  #E8EAED;
+      --gray-400:  #9AA0A6;
+      --gray-700:  #3C4043;
+      --gray-900:  #202124;
+      --font:      'Segoe UI', system-ui, -apple-system, sans-serif;
+      --mono:      'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    }
+
+    /* ─── BASE ─── */
+    body {
+      font-family: var(--font);
+      font-size: 11pt;
+      line-height: 1.65;
+      color: var(--gray-900);
+      background: #fff;
+    }
+
+    /* ─── PAGE LAYOUT ─── */
+    @page {
+      size: A4;
+      margin: 22mm 18mm 20mm 22mm;
+      @bottom-center { content: counter(page); font-size: 9pt; color: var(--gray-400); }
+    }
+    .page-break { page-break-before: always; break-before: page; }
+
+    /* ─── COVER PAGE ─── */
+    .cover {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 250mm;
+      text-align: center;
+      padding: 20mm 15mm;
+      background: linear-gradient(160deg, #0055CC 0%, #003380 55%, #001F5B 100%);
+      color: #fff;
+      page-break-after: always;
+      break-after: page;
+      border-radius: 0;
+    }
+    .cover .robot-icon {
+      font-size: 72pt;
+      margin-bottom: 10mm;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,.4));
+    }
+    .cover h1 {
+      font-size: 28pt;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 3mm;
+    }
+    .cover h2 {
+      font-size: 16pt;
+      font-weight: 300;
+      opacity: .85;
+      margin-bottom: 12mm;
+    }
+    .cover .badge {
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 20px;
+      padding: 4px 16px;
+      font-size: 10pt;
+      margin: 2px;
+      display: inline-block;
+    }
+    .cover .badges { margin-bottom: 14mm; }
+    .cover .meta {
+      font-size: 9pt;
+      opacity: .7;
+      margin-top: auto;
+      border-top: 1px solid rgba(255,255,255,.2);
+      padding-top: 6mm;
+      width: 100%;
+    }
+
+    /* ─── TABLE OF CONTENTS ─── */
+    .toc {
+      page-break-after: always;
+      break-after: page;
+      padding: 10mm 0;
+    }
+    .toc h2 { font-size: 18pt; color: var(--blue); margin-bottom: 7mm; }
+    .toc ol { list-style: none; padding: 0; }
+    .toc > ol > li {
+      border-bottom: 1px dotted var(--gray-200);
+      padding: 3.5px 0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11pt;
+    }
+    .toc > ol > li.section {
+      font-weight: 700;
+      font-size: 12pt;
+      color: var(--blue);
+      border-bottom: 1px solid var(--blue-light);
+      margin-top: 4mm;
+      padding-bottom: 2px;
+    }
+    .toc > ol > li .pg {
+      color: var(--gray-400);
+      font-size: 9pt;
+      min-width: 20px;
+      text-align: right;
+    }
+    .toc .sub {
+      padding-left: 12mm;
+      font-size: 10pt;
+      color: var(--gray-700);
+    }
+
+    /* ─── HEADINGS ─── */
+    h1.chapter {
+      font-size: 22pt;
+      font-weight: 800;
+      color: var(--blue-dark);
+      margin-bottom: 4mm;
+      padding-bottom: 3mm;
+      border-bottom: 3px solid var(--blue);
+    }
+    h2.section {
+      font-size: 15pt;
+      font-weight: 700;
+      color: var(--blue);
+      margin: 7mm 0 3mm;
+    }
+    h3.subsection {
+      font-size: 12pt;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin: 5mm 0 2mm;
+      padding-left: 6px;
+      border-left: 3px solid var(--blue);
+    }
+    h4 {
+      font-size: 10.5pt;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin: 3mm 0 1.5mm;
+    }
+
+    /* ─── PARAGRAPH & LISTS ─── */
+    p { margin-bottom: 2.5mm; }
+    ul, ol { padding-left: 6mm; margin-bottom: 3mm; }
+    li { margin-bottom: 1.5mm; }
+    li::marker { color: var(--blue); }
+    strong { color: var(--gray-900); }
+
+    /* ─── CODE ─── */
+    code {
+      font-family: var(--mono);
+      font-size: 9.5pt;
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+      border-radius: 4px;
+      padding: 1px 5px;
+    }
+    pre {
+      font-family: var(--mono);
+      font-size: 9pt;
+      background: var(--gray-900);
+      color: #E8EAED;
+      border-radius: 8px;
+      padding: 5mm 6mm;
+      overflow-x: auto;
+      margin: 3mm 0 4mm;
+      line-height: 1.55;
+      page-break-inside: avoid;
+    }
+    pre .comment { color: #9AA0A6; }
+    pre .key     { color: #8AB4F8; }
+    pre .str     { color: #81C995; }
+    pre .num     { color: #F28B82; }
+    pre .kw      { color: #C792EA; }
+
+    /* ─── TABLES ─── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 3mm 0 5mm;
+      font-size: 9.5pt;
+      page-break-inside: avoid;
+    }
+    thead tr { background: var(--blue); color: #fff; }
+    thead th { padding: 3mm 4mm; text-align: left; font-weight: 600; font-size: 9pt; }
+    tbody tr:nth-child(even) { background: var(--gray-50); }
+    tbody td { padding: 2.5mm 4mm; border-bottom: 1px solid var(--gray-200); vertical-align: top; }
+    tbody td code { font-size: 8.5pt; background: transparent; border: none; padding: 0; }
+
+    /* ─── CALLOUTS ─── */
+    .callout {
+      border-radius: 8px;
+      padding: 4mm 5mm;
+      margin: 3mm 0 4mm;
+      page-break-inside: avoid;
+    }
+    .callout.info    { background: var(--blue-light); border-left: 4px solid var(--blue); }
+    .callout.warning { background: #FFF3CD; border-left: 4px solid var(--yellow); }
+    .callout.danger  { background: #FDECEA; border-left: 4px solid var(--accent); }
+    .callout.success { background: #E6F4EA; border-left: 4px solid var(--green); }
+    .callout-title   { font-weight: 700; font-size: 10pt; margin-bottom: 2mm; }
+    .callout.info    .callout-title { color: var(--blue-dark); }
+    .callout.warning .callout-title { color: #7B5800; }
+    .callout.danger  .callout-title { color: #B31412; }
+    .callout.success .callout-title { color: #1E6E2E; }
+
+    /* ─── DIAGRAM ─── */
+    .diagram {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 5mm 6mm;
+      font-family: var(--mono);
+      font-size: 9pt;
+      margin: 3mm 0 4mm;
+      line-height: 1.7;
+      page-break-inside: avoid;
+      white-space: pre;
+    }
+
+    /* ─── SPEC GRID ─── */
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4mm;
+      margin: 3mm 0 5mm;
+    }
+    .spec-card {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 4mm;
+    }
+    .spec-card .label { font-size: 8.5pt; color: var(--gray-400); text-transform: uppercase; letter-spacing: .5px; }
+    .spec-card .value { font-size: 12pt; font-weight: 700; color: var(--blue); }
+    .spec-card .desc  { font-size: 9pt; color: var(--gray-700); margin-top: 1mm; }
+
+    /* ─── ENDPOINT CARD ─── */
+    .endpoint {
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      margin: 3mm 0 4mm;
+      page-break-inside: avoid;
+      overflow: hidden;
+    }
+    .endpoint-header {
+      background: var(--gray-100);
+      padding: 2.5mm 4mm;
+      display: flex;
+      align-items: center;
+      gap: 3mm;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .method {
+      background: var(--green);
+      color: #fff;
+      font-weight: 700;
+      font-size: 8pt;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: var(--mono);
+    }
+    .endpoint-path {
+      font-family: var(--mono);
+      font-size: 10pt;
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+    .endpoint-body { padding: 3mm 4mm; }
+    .endpoint-body p { margin-bottom: 1.5mm; font-size: 9.5pt; }
+
+    /* ─── FLOW DIAGRAM ─── */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 2mm;
+      flex-wrap: wrap;
+      margin: 3mm 0;
+      font-size: 9.5pt;
+    }
+    .flow-box {
+      background: var(--blue-light);
+      border: 1px solid #B8D0F6;
+      border-radius: 6px;
+      padding: 2.5mm 5mm;
+      font-weight: 600;
+      color: var(--blue-dark);
+      white-space: nowrap;
+    }
+    .flow-arrow { color: var(--blue); font-weight: 700; font-size: 13pt; }
+
+    /* ─── PRINT ─── */
+    @media print {
+      .cover { border-radius: 0; }
+      a { text-decoration: none; color: inherit; }
+      pre { white-space: pre-wrap; word-break: break-word; }
+      .diagram { white-space: pre-wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     COVER
+══════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="robot-icon">🥷</div>
+  <h1>Otto Ninja Pro Controller</h1>
+  <h2>Manual Técnico</h2>
+  <div class="badges">
+    <span class="badge">Versión 2.0.0</span>
+    <span class="badge">ESP32 · HTTP REST</span>
+    <span class="badge">Web · Android</span>
+    <span class="badge">Capacitor 6</span>
+  </div>
+  <p style="opacity:.8; max-width:120mm; font-size:10.5pt; line-height:1.6">
+    Documentación completa sobre arquitectura, protocolo de comunicación,
+    funcionalidades y guía de despliegue para el controlador del robot humanode Otto Ninja.
+  </p>
+  <div class="meta">
+    Laboratorio de Robótica &nbsp;|&nbsp; 2025 &nbsp;|&nbsp; Uso Interno
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TABLE OF CONTENTS
+══════════════════════════════════════════════ -->
+<div class="toc">
+  <h2>Tabla de Contenidos</h2>
+  <ol>
+    <li class="section"><span>1. Introducción y Descripción General</span><span class="pg">3</span></li>
+    <li><span class="sub">1.1 Propósito del sistema</span><span class="pg">3</span></li>
+    <li><span class="sub">1.2 Alcance y audiencia objetivo</span><span class="pg">3</span></li>
+    <li><span class="sub">1.3 Tecnologías utilizadas</span><span class="pg">3</span></li>
+
+    <li class="section"><span>2. Arquitectura del Sistema</span><span class="pg">4</span></li>
+    <li><span class="sub">2.1 Diagrama de componentes</span><span class="pg">4</span></li>
+    <li><span class="sub">2.2 Estructura de archivos</span><span class="pg">4</span></li>
+    <li><span class="sub">2.3 Flujo de datos</span><span class="pg">5</span></li>
+
+    <li class="section"><span>3. Instalación y Configuración</span><span class="pg">5</span></li>
+    <li><span class="sub">3.1 Requisitos previos</span><span class="pg">5</span></li>
+    <li><span class="sub">3.2 Instalación local</span><span class="pg">5</span></li>
+    <li><span class="sub">3.3 Compilación para Android</span><span class="pg">6</span></li>
+    <li><span class="sub">3.4 Configuración del ESP32</span><span class="pg">6</span></li>
+
+    <li class="section"><span>4. Protocolo de Comunicación (API REST)</span><span class="pg">7</span></li>
+    <li><span class="sub">4.1 Convenciones generales</span><span class="pg">7</span></li>
+    <li><span class="sub">4.2 Endpoints disponibles</span><span class="pg">7</span></li>
+    <li><span class="sub">4.3 Sistema de debounce y throttling</span><span class="pg">9</span></li>
+
+    <li class="section"><span>5. Módulos Funcionales</span><span class="pg">10</span></li>
+    <li><span class="sub">5.1 Sistema de Conexión</span><span class="pg">10</span></li>
+    <li><span class="sub">5.2 Controles de Juego (Joystick y D-Pad)</span><span class="pg">10</span></li>
+    <li><span class="sub">5.3 Control de Brazos y Cabeza</span><span class="pg">11</span></li>
+    <li><span class="sub">5.4 Sistema de Ataques</span><span class="pg">11</span></li>
+    <li><span class="sub">5.5 Sistema de Sonido (Buzzer)</span><span class="pg">12</span></li>
+    <li><span class="sub">5.6 Sistema de Calibración</span><span class="pg">13</span></li>
+
+    <li class="section"><span>6. Interfaz de Usuario</span><span class="pg">14</span></li>
+    <li><span class="sub">6.1 Diseño y sistema de estilos</span><span class="pg">14</span></li>
+    <li><span class="sub">6.2 Navegación y paneles</span><span class="pg">14</span></li>
+    <li><span class="sub">6.3 Orientación y responsividad</span><span class="pg">15</span></li>
+
+    <li class="section"><span>7. Referencia de Código</span><span class="pg">15</span></li>
+    <li><span class="sub">7.1 Estado global (state)</span><span class="pg">15</span></li>
+    <li><span class="sub">7.2 Funciones principales</span><span class="pg">16</span></li>
+
+    <li class="section"><span>8. Solución de Problemas</span><span class="pg">17</span></li>
+    <li class="section"><span>9. Glosario</span><span class="pg">18</span></li>
+  </ol>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     CHAPTER 1 – INTRODUCCIÓN
+══════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 class="chapter">1. Introducción y Descripción General</h1>
+
+<h2 class="section">1.1 Propósito del sistema</h2>
+<p>
+  <strong>Otto Ninja Pro Controller</strong> es una aplicación web/móvil de control remoto en
+  tiempo real diseñada para operar el robot humanode <em>Otto Ninja</em> equipado con un
+  microcontrolador <strong>ESP32</strong>. Permite enviar comandos de movimiento, ejecutar
+  secuencias de combate, reproducir efectos de sonido y ajustar la calibración mecánica de los
+  servomotores, todo desde una interfaz táctil intuitiva optimizada para orientación horizontal.
+</p>
+
+<h2 class="section">1.2 Alcance y audiencia objetivo</h2>
+<p>Este manual está dirigido a:</p>
+<ul>
+  <li><strong>Desarrolladores</strong> que necesiten mantener, extender o depurar la aplicación.</li>
+  <li><strong>Técnicos de laboratorio</strong> que configuren el entorno de despliegue.</li>
+  <li><strong>Instructores de robótica</strong> que integren el controlador en actividades educativas.</li>
+</ul>
+
+<h2 class="section">1.3 Tecnologías utilizadas</h2>
+<div class="spec-grid">
+  <div class="spec-card">
+    <div class="label">Frontend</div>
+    <div class="value">Vanilla JS + CSS</div>
+    <div class="desc">Sin frameworks. HTML5, CSS3 y JavaScript ES2020+ nativos.</div>
+  </div>
+  <div class="spec-card">
+    <div class="label">Empaquetado móvil</div>
+    <div class="value">Capacitor 6</div>
+    <div class="desc">Genera APK nativo Android a partir del código web.</div>
+  </div>
+  <div class="spec-card">
+    <div class="label">Hardware objetivo</div>
+    <div class="value">ESP32</div>
+    <div class="desc">Microcontrolador con servidor HTTP REST embebido en la misma red WiFi.</div>
+  </div>
+  <div class="spec-card">
+    <div class="label">Build Android</div>
+    <div class="value">Gradle 8 + JDK 17</div>
+    <div class="desc">Pipeline estándar Android Studio / CLI.</div>
+  </div>
+  <div class="spec-card">
+    <div class="label">Versión</div>
+    <div class="value">2.0.0</div>
+    <div class="desc">Versión estable con modo joystick, D-Pad y emoji icons.</div>
+  </div>
+  <div class="spec-card">
+    <div class="label">Idioma</div>
+    <div class="value">Español</div>
+    <div class="desc">Interfaz completamente localizada al español.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     CHAPTER 2 – ARQUITECTURA
+══════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 class="chapter">2. Arquitectura del Sistema</h1>
+
+<h2 class="section">2.1 Diagrama de componentes</h2>
+<div class="diagram">┌───────────────────────────────────────────────────────────────┐
+│                   DISPOSITIVO DE CONTROL                      │
+│  ┌─────────────────────────────────────────────────────────┐  │
+│  │               Otto Ninja Pro Controller                  │  │
+│  │                                                          │  │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────┐  │  │
+│  │  │  index   │  │  app.js  │  │styles.css│  │ www/   │  │  │
+│  │  │  .html   │◄─│ (lógica) │  │ (estilos)│  │(build) │  │  │
+│  │  └──────────┘  └────┬─────┘  └──────────┘  └────────┘  │  │
+│  │                      │ Fetch API (HTTP GET)               │  │
+│  └──────────────────────┼──────────────────────────────────┘  │
+│                          │ Red WiFi local                      │
+└─────────────────────────┼────────────────────────────────────┘
+                           │
+              ┌────────────▼────────────┐
+              │     ESP32 (Servidor)    │
+              │  · HTTP REST en :80     │
+              │  · Servo Controller     │
+              │  · Buzzer PWM           │
+              │  · Sensor IMU           │
+              └────────────────────────┘</div>
+
+<p>
+  La comunicación es <strong>unidireccional</strong>: la aplicación envía peticiones HTTP GET al
+  ESP32, que ejecuta las acciones físicas y responde con un JSON simple de confirmación.
+  No existe WebSocket ni subscripción de eventos; el estado del robot no se refleja en la UI.
+</p>
+
+<h2 class="section">2.2 Estructura de archivos</h2>
+<div class="diagram">otto-ninja-controller/
+├── index.html              ← Estructura HTML de la interfaz (551 líneas)
+├── app.js                  ← Toda la lógica de la aplicación (1 135 líneas)
+├── styles.css              ← Sistema de diseño y estilos (1 953 líneas)
+├── package.json            ← Metadatos y scripts npm
+├── capacitor.config.json   ← Configuración Capacitor (Android)
+├── OTTO_NINJA.png          ← Logo del robot (38 KB)
+├── logo.png                ← Logo del laboratorio (83 KB)
+├── www/                    ← Assets web copiados para Capacitor
+└── android/                ← Proyecto Android Studio generado
+    ├── app/                ← Módulo principal Android
+    ├── capacitor-cordova-android-plugins/
+    └── .gradle/</div>
+
+<h2 class="section">2.3 Flujo de datos</h2>
+<div class="flow">
+  <div class="flow-box">Interacción usuario</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">Event Listener</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">Debounce check</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">sendRequest()</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">Fetch HTTP GET</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">ESP32 REST API</div>
+</div>
+<div class="flow" style="margin-top:1mm">
+  <div class="flow-box">ESP32 ejecuta acción</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">Respuesta JSON</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">addLog() / UI feedback</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     CHAPTER 3 – INSTALACIÓN
+══════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 class="chapter">3. Instalación y Configuración</h1>
+
+<h2 class="section">3.1 Requisitos previos</h2>
+<table>
+  <thead><tr><th>Componente</th><th>Versión mínima</th><th>Notas</th></tr></thead>
+  <tbody>
+    <tr><td>Node.js</td><td>18 LTS</td><td>Necesario para scripts npm y Capacitor CLI</td></tr>
+    <tr><td>npm</td><td>9+</td><td>Incluido con Node.js</td></tr>
+    <tr><td>JDK</td><td>17</td><td>Requerido para compilar el APK Android</td></tr>
+    <tr><td>Android Studio</td><td>Iguana / 2023.2</td><td>O Gradle CLI ≥ 8.0</td></tr>
+    <tr><td>Navegador web</td><td>Chrome 120+ / Firefox 120+</td><td>Para uso como web app</td></tr>
+    <tr><td>Red WiFi</td><td>2.4 GHz o 5 GHz</td><td>El dispositivo y el ESP32 deben estar en la misma subred</td></tr>
+  </tbody>
+</table>
+
+<h2 class="section">3.2 Instalación y ejecución local</h2>
+<pre><span class="comment"># 1. Clonar el repositorio</span>
+git clone https://github.com/Maykhol10/otto-ninja-controller.git
+cd otto-ninja-controller
+
+<span class="comment"># 2. Instalar dependencias</span>
+npm install
+
+<span class="comment"># 3a. Servidor de desarrollo (con hot-reload)</span>
+npm run dev     <span class="comment"># Abre http://localhost:8000</span>
+
+<span class="comment"># 3b. Servidor de producción estático</span>
+npm start       <span class="comment"># npx serve .</span></pre>
+
+<div class="callout info">
+  <div class="callout-title">ℹ️ Nota sobre CORS</div>
+  La aplicación envía peticiones HTTP a la IP del ESP32. Si se sirve desde
+  <code>localhost</code>, los navegadores modernos requieren que el ESP32 incluya el header
+  <code>Access-Control-Allow-Origin: *</code> en sus respuestas.
+</div>
+
+<h2 class="section">3.3 Compilación para Android (APK)</h2>
+<pre><span class="comment"># Sincronizar assets web con el proyecto Android</span>
+npm run android:build
+<span class="comment"># Equivale a: npx cap sync android && npx cap open android</span>
+
+<span class="comment"># Generar APK debug directamente desde CLI</span>
+npm run android:apk
+<span class="comment"># Equivale a: cd android && ./gradlew assembleDebug</span>
+
+<span class="comment"># El APK resultante se encuentra en:</span>
+<span class="comment"># android/app/build/outputs/apk/debug/app-debug.apk</span></pre>
+
+<div class="callout warning">
+  <div class="callout-title">⚠️ Configuración de red en Android</div>
+  El archivo <code>capacitor.config.json</code> establece el esquema HTTP (no HTTPS) para
+  permitir peticiones a la IP local del ESP32 desde la APK Android. No modificar sin revisar
+  las políticas de seguridad de red de Android.
+</div>
+
+<h2 class="section">3.4 Configuración del ESP32</h2>
+<p>El ESP32 debe estar programado con un firmware que:</p>
+<ul>
+  <li>Se conecte a la red WiFi local y obtenga/use una IP estática conocida.</li>
+  <li>Exponga un servidor HTTP en el puerto <strong>80</strong>.</li>
+  <li>Responda a los endpoints definidos en la Sección 4.</li>
+  <li>Incluya el header <code>Access-Control-Allow-Origin: *</code> en todas las respuestas.</li>
+</ul>
+
+<div class="callout success">
+  <div class="callout-title">✅ Conectar la app al robot</div>
+  En la pantalla principal de la app, escribir la IP del ESP32 en el campo de texto
+  (p. ej. <code>192.168.1.105</code>) y pulsar <strong>Conectar</strong>. La app verificará
+  el endpoint <code>/status</code> para confirmar la conexión.
+</div>
+
+<!-- ══════════════════════════════════════════════
+     CHAPTER 4 – API REST
+══════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 class="chapter">4. Protocolo de Comunicación (API REST)</h1>
+
+<h2 class="section">4.1 Convenciones generales</h2>
+<ul>
+  <li>Todas las peticiones son <strong>HTTP GET</strong> a <code>http://&lt;IP_ESP32&gt;/&lt;endpoint&gt;</code>.</li>
+  <li>Los parámetros se pasan en el <strong>query string</strong>: <code>?param=valor</code>.</li>
+  <li>Las respuestas se esperan en <strong>JSON</strong>; cualquier respuesta no vacía se considera éxito.</li>
+  <li>Timeout por petición: <strong>2 000 ms</strong> (controlado por <code>AbortController</code>).</li>
+  <li>En caso de error de red, la función registra el error en el log pero <strong>no reintenta</strong>.</li>
+</ul>
+
+<h2 class="section">4.2 Endpoints disponibles</h2>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">GET</span>
+    <span class="endpoint-path">/status</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Descripción:</strong> Verificación de conectividad (ping).</p>
+    <p><strong>Parámetros:</strong> ninguno.</p>
+    <p><strong>Respuesta esperada:</strong> cualquier respuesta JSON (p. ej. <code>{"ok":true}</code>).</p>
+    <p><strong>Uso en app:</strong> función <code>connect()</code>.</p>
+  </div>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">GET</span>
+    <span class="endpoint-path">/mode</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Descripción:</strong> Cambia el modo de desplazamiento del robot.</p>
+    <p><strong>Parámetros:</strong></p>
+    <table>
+      <thead><tr><th>Parámetro</th><th>Valores</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td><code>cmd</code></td><td><code>rodar</code> | <code>caminar</code></td><td>Modo joystick analógico o D-Pad</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Ejemplo:</strong> <code>GET /mode?cmd=rodar</code></p>
+  </div>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">GET</span>
+    <span class="endpoint-path">/walk</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Descripción:</strong> Ordena al robot caminar en una dirección.</p>
+    <table>
+      <thead><tr><th>Parámetro</th><th>Valores</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td><code>cmd</code></td><td><code>forward</code> | <code>backward</code> | <code>left</code> | <code>right</code> | <code>stop</code></td><td>Dirección de marcha</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Ejemplo:</strong> <code>GET /walk?cmd=forward</code></p>
+  </div>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">GET</span>
+    <span class="endpoint-path">/joystick</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Descripción:</strong> Envía la posición analógica del joystick (modo Rodar).</p>
+    <table>
+      <thead><tr><th>Parámetro</th><th>Rango</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td><code>x</code></td><td>-100 … 100</td><td>Eje horizontal (negativo = izquierda)</td></tr>
+        <tr><td><code>y</code></td><td>-100 … 100</td><td>Eje vertical (negativo = adelante)</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Ejemplo:</strong> <code>GET /joystick?x=45&amp;y=-78</code></p>
+    <p><strong>Frecuencia:</strong> máximo cada 100 ms (throttling en cliente).</p>
+  </div>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">GET</span>
+    <span class="endpoint-path">/arms</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Descripción:</strong> Controla los servos de los brazos.</p>
+    <table>
+      <thead><tr><th>Parámetro</th><th>Valores</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td><code>cmd</code></td><td><code>up</code> | <code>down</code> | <code>left</code> | <code>right</code> | <code>home</code></td><td>Posición de los brazos</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">GET</span>
+    <span class="endpoint-path">/head</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Descripción:</strong> Gira la cabeza del robot.</p>
+    <table>
+      <thead><tr><th>Parámetro</th><th>Valores</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td><code>cmd</code></td><td><code>left</code> | <code>right</code> | <code>center</code></td><td>Dirección del giro de cabeza</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">GET</span>
+    <span class="endpoint-path">/attack</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Descripción:</strong> Ejecuta una secuencia de combate preprogramada.</p>
+    <table>
+      <thead><tr><th>Parámetro</th><th>Valores</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td><code>cmd</code></td><td><code>slash</code> | <code>uppercut</code> | <code>spin360</code> | <code>estocada</code> | <code>defensa</code> | <code>combo_furia</code> | <code>combo_samurai</code> | <code>burla</code> | <code>ultimate</code></td><td>Identificador del ataque</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Ejemplo:</strong> <code>GET /attack?cmd=slash</code></p>
+  </div>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">GET</span>
+    <span class="endpoint-path">/buzzer</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Descripción:</strong> Reproduce un efecto de sonido o melodía.</p>
+    <table>
+      <thead><tr><th>Parámetro</th><th>Rango</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td><code>song</code></td><td>1 … 16</td><td>Número de canción/efecto pregrabado</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Ejemplo:</strong> <code>GET /buzzer?song=3</code></p>
+  </div>
+</div>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method">GET</span>
+    <span class="endpoint-path">/offset</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Descripción:</strong> Ajusta el offset de calibración de los servos de las piernas.</p>
+    <table>
+      <thead><tr><th>Parámetro</th><th>Rango</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td><code>left</code></td><td>-90 … 90</td><td>Desplazamiento angular del servo izquierdo (grados)</td></tr>
+        <tr><td><code>right</code></td><td>-90 … 90</td><td>Desplazamiento angular del servo derecho (grados)</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Ejemplo (ambas piernas):</strong> <code>GET /offset?left=5&amp;right=-3</code></p>
+    <p><strong>Ejemplo (solo izquierda):</strong> <code>GET /offset?left=5</code></p>
+  </div>
+</div>
+
+<h2 class="section">4.3 Sistema de debounce y throttling</h2>
+<p>
+  Para evitar la saturación del ESP32, la aplicación implementa dos mecanismos de control de
+  frecuencia de comandos:
+</p>
+<table>
+  <thead><tr><th>Mecanismo</th><th>Intervalo</th><th>Aplica a</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Cooldown global</strong></td>
+      <td>400 ms</td>
+      <td>Todos los comandos de acción (walk, arms, head, attack, buzzer)</td>
+    </tr>
+    <tr>
+      <td><strong>Throttle de joystick</strong></td>
+      <td>100 ms</td>
+      <td>Envío continuo de posición X/Y del joystick analógico</td>
+    </tr>
+    <tr>
+      <td><strong>Deduplicación</strong></td>
+      <td>—</td>
+      <td>No envía el mismo comando walk si ya estaba activo</td>
+    </tr>
+  </tbody>
+</table>
+
+<pre><span class="comment">// Fragmento del sistema de debounce (app.js)</span>
+<span class="kw">function</span> <span class="key">canSendCommand</span>(commandType) {
+  <span class="kw">const</span> now = Date.now();
+  <span class="kw">const</span> lastTime = state.lastCommandTime[commandType] || <span class="num">0</span>;
+  <span class="kw">if</span> (now - lastTime &lt; <span class="num">400</span>) <span class="kw">return false</span>;
+  state.lastCommandTime[commandType] = now;
+  <span class="kw">return true</span>;
+}</pre>
+
+<!-- ══════════════════════════════════════════════
+     CHAPTER 5 – MÓDULOS FUNCIONALES
+══════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 class="chapter">5. Módulos Funcionales</h1>
+
+<h2 class="section">5.1 Sistema de Conexión</h2>
+<p>
+  La función <code>connect()</code> (<em>app.js:275</em>) gestiona la conexión al ESP32:
+</p>
+<ol>
+  <li>Lee la IP del campo de texto del header.</li>
+  <li>Valida que no esté vacía.</li>
+  <li>Realiza una petición a <code>/status</code> con <code>sendRequest()</code>.</li>
+  <li>Si responde correctamente: actualiza el indicador visual a verde, guarda la IP en <code>state.esp32IP</code> y habilita todos los controles.</li>
+  <li>Si falla: muestra estado "Desconectado" en rojo.</li>
+</ol>
+<div class="callout info">
+  <div class="callout-title">ℹ️ Persistencia de IP</div>
+  La IP se almacena en <code>localStorage</code> bajo la clave <code>esp32IP</code>, de modo que
+  se restaura automáticamente al recargar la aplicación.
+</div>
+
+<h2 class="section">5.2 Controles de Juego: Joystick y D-Pad</h2>
+<p>El panel de controles tiene <strong>dos modos</strong> seleccionables mediante tabs:</p>
+
+<h3 class="subsection">Modo Rodar (Joystick Analógico)</h3>
+<p>
+  Implementado en <em>app.js:713–937</em>. Utiliza la <strong>Pointer Events API</strong>
+  para capturar input táctil y de ratón de forma unificada.
+</p>
+<ul>
+  <li><strong>Radio máximo:</strong> 100 px desde el centro.</li>
+  <li><strong>Normalización:</strong> Los valores X/Y se normalizan a rango <code>[-100, 100]</code>.</li>
+  <li><strong>Frecuencia de envío:</strong> máximo 10 actualizaciones/segundo (100 ms).</li>
+  <li><strong>Pointer capture:</strong> se usa <code>setPointerCapture()</code> para mantener el arrastre fuera del elemento.</li>
+</ul>
+
+<pre><span class="comment">// Ciclo de actualización del joystick (simplificado)</span>
+<span class="kw">function</span> <span class="key">sendJoystickUpdate</span>() {
+  <span class="kw">const</span> now = Date.now();
+  <span class="kw">if</span> (now - state.joystick.lastUpdate &lt; <span class="num">100</span>) <span class="kw">return</span>;
+  state.joystick.lastUpdate = now;
+
+  <span class="kw">const</span> x = Math.round(state.joystick.x);
+  <span class="kw">const</span> y = Math.round(state.joystick.y);
+  sendRequest(<span class="str">'joystick'</span>, { x, y });
+}</pre>
+
+<h3 class="subsection">Modo Caminar (D-Pad)</h3>
+<p>Botones direccionales clásicos:</p>
+<table>
+  <thead><tr><th>Botón</th><th>Comando</th><th>Descripción</th></tr></thead>
+  <tbody>
+    <tr><td>↑ Adelante</td><td><code>/walk?cmd=forward</code></td><td>Avanza hacia adelante</td></tr>
+    <tr><td>↓ Atrás</td><td><code>/walk?cmd=backward</code></td><td>Retrocede</td></tr>
+    <tr><td>← Izquierda</td><td><code>/walk?cmd=left</code></td><td>Gira/desplaza a la izquierda</td></tr>
+    <tr><td>→ Derecha</td><td><code>/walk?cmd=right</code></td><td>Gira/desplaza a la derecha</td></tr>
+    <tr><td>⏹ Home</td><td><code>/walk?cmd=stop</code></td><td>Detiene el movimiento</td></tr>
+  </tbody>
+</table>
+
+<h2 class="section">5.3 Control de Brazos y Cabeza</h2>
+<p>Panel <em>Brazos</em> (<em>app.js:341–373</em>). Dos grupos de botones independientes:</p>
+
+<h4>Brazos</h4>
+<table>
+  <thead><tr><th>Botón</th><th>Endpoint</th><th>Acción</th></tr></thead>
+  <tbody>
+    <tr><td>Brazos Arriba</td><td><code>/arms?cmd=up</code></td><td>Eleva ambos brazos</td></tr>
+    <tr><td>Brazos Abajo</td><td><code>/arms?cmd=down</code></td><td>Baja ambos brazos</td></tr>
+    <tr><td>Brazo Izq.</td><td><code>/arms?cmd=left</code></td><td>Mueve brazo izquierdo</td></tr>
+    <tr><td>Brazo Der.</td><td><code>/arms?cmd=right</code></td><td>Mueve brazo derecho</td></tr>
+    <tr><td>Posición Home</td><td><code>/arms?cmd=home</code></td><td>Posición neutral</td></tr>
+  </tbody>
+</table>
+
+<h4>Cabeza</h4>
+<table>
+  <thead><tr><th>Botón</th><th>Endpoint</th><th>Acción</th></tr></thead>
+  <tbody>
+    <tr><td>Girar Izquierda</td><td><code>/head?cmd=left</code></td><td>Gira la cabeza a la izquierda</td></tr>
+    <tr><td>Centrar</td><td><code>/head?cmd=center</code></td><td>Cabeza al frente</td></tr>
+    <tr><td>Girar Derecha</td><td><code>/head?cmd=right</code></td><td>Gira la cabeza a la derecha</td></tr>
+  </tbody>
+</table>
+
+<h2 class="section">5.4 Sistema de Ataques</h2>
+<p>
+  Panel <em>Ataques</em> (<em>app.js:375–519</em>). El usuario selecciona hasta
+  <strong>4 ataques favoritos</strong> de un catálogo de 9. Los seleccionados aparecen como botones
+  de acceso rápido en el panel de controles.
+</p>
+
+<table>
+  <thead><tr><th>ID</th><th>Nombre</th><th>Icono</th><th>Descripción</th></tr></thead>
+  <tbody>
+    <tr><td><code>slash</code></td><td>Slash</td><td>⚔️</td><td>Golpe lateral rápido</td></tr>
+    <tr><td><code>uppercut</code></td><td>Uppercut</td><td>👆</td><td>Gancho ascendente</td></tr>
+    <tr><td><code>spin360</code></td><td>Giro 360°</td><td>🌀</td><td>Rotación completa</td></tr>
+    <tr><td><code>estocada</code></td><td>Estocada</td><td>🎯</td><td>Golpe frontal preciso</td></tr>
+    <tr><td><code>defensa</code></td><td>Defensa</td><td>🛡️</td><td>Posición defensiva</td></tr>
+    <tr><td><code>combo_furia</code></td><td>Combo Furia</td><td>😡</td><td>Combo agresivo multi-golpe</td></tr>
+    <tr><td><code>combo_samurai</code></td><td>Combo Samurai</td><td>🏯</td><td>Secuencia estilo samurai</td></tr>
+    <tr><td><code>burla</code></td><td>Burla</td><td>😎</td><td>Animación de provocación</td></tr>
+    <tr><td><code>ultimate</code></td><td>Ultimate</td><td>💫</td><td>Secuencia especial completa</td></tr>
+  </tbody>
+</table>
+
+<div class="callout warning">
+  <div class="callout-title">⚠️ Restricción de selección</div>
+  Solo se pueden seleccionar <strong>máximo 4 ataques</strong>. Al intentar seleccionar un quinto,
+  la app muestra un aviso y deshabilita el checkbox. El contador <em>X/4</em> en la UI refleja
+  el número actual de selecciones.
+</div>
+
+<h2 class="section">5.5 Sistema de Sonido (Buzzer)</h2>
+<p>
+  Panel <em>Sonido</em> (<em>app.js:521–654</em>). Catálogo de <strong>16 efectos de sonido</strong>
+  numerados del 1 al 16. Igual que los ataques, el usuario pre-selecciona hasta
+  <strong>4 sonidos favoritos</strong>.
+</p>
+
+<table>
+  <thead><tr><th>#</th><th>Nombre</th><th>Icono</th><th># </th><th>Nombre</th><th>Icono</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Conexión</td><td>🔌</td><td>9</td><td>Feliz</td><td>😊</td></tr>
+    <tr><td>2</td><td>Desconexión</td><td>📴</td><td>10</td><td>Triste</td><td>😢</td></tr>
+    <tr><td>3</td><td>Inicio batalla</td><td>⚔️</td><td>11</td><td>Sorprendido</td><td>😲</td></tr>
+    <tr><td>4</td><td>Victoria</td><td>🏆</td><td>12</td><td>Enojado</td><td>😤</td></tr>
+    <tr><td>5</td><td>Derrota</td><td>💀</td><td>13</td><td>Confundido</td><td>🤔</td></tr>
+    <tr><td>6</td><td>Ataque</td><td>💥</td><td>14</td><td>Asustado</td><td>😱</td></tr>
+    <tr><td>7</td><td>Defensa</td><td>🛡️</td><td>15</td><td>Risa</td><td>😂</td></tr>
+    <tr><td>8</td><td>Power Up</td><td>⚡</td><td>16</td><td>Melodía especial</td><td>🎵</td></tr>
+  </tbody>
+</table>
+
+<p>
+  Al reproducir un sonido, la UI muestra un <strong>visualizador animado</strong> con barras
+  que simulan el espectro de audio. La animación dura aproximadamente 3 segundos (tiempo
+  estimado de reproducción).
+</p>
+
+<h2 class="section">5.6 Sistema de Calibración</h2>
+<p>
+  Panel <em>Calibrar</em> (<em>app.js:656–711</em>). Permite ajustar mecánicamente la posición
+  neutral de las piernas mediante sliders de offset angular.
+</p>
+<table>
+  <thead><tr><th>Control</th><th>Parámetro</th><th>Rango</th><th>Descripción</th></tr></thead>
+  <tbody>
+    <tr><td>Slider pierna izquierda</td><td><code>left</code></td><td>-90° … +90°</td><td>Offset del servo izquierdo</td></tr>
+    <tr><td>Slider pierna derecha</td><td><code>right</code></td><td>-90° … +90°</td><td>Offset del servo derecho</td></tr>
+  </tbody>
+</table>
+
+<h4>Botones de acción de calibración</h4>
+<table>
+  <thead><tr><th>Botón</th><th>Endpoint generado</th><th>Descripción</th></tr></thead>
+  <tbody>
+    <tr><td>Aplicar Izquierda</td><td><code>/offset?left=N</code></td><td>Aplica solo el offset izquierdo</td></tr>
+    <tr><td>Aplicar Derecha</td><td><code>/offset?right=N</code></td><td>Aplica solo el offset derecho</td></tr>
+    <tr><td>Aplicar Ambos</td><td><code>/offset?left=N&amp;right=M</code></td><td>Aplica ambos offsets simultáneamente</td></tr>
+    <tr><td>Resetear</td><td><code>/offset?left=0&amp;right=0</code></td><td>Vuelve a calibración cero</td></tr>
+  </tbody>
+</table>
+
+<!-- ══════════════════════════════════════════════
+     CHAPTER 6 – INTERFAZ DE USUARIO
+══════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 class="chapter">6. Interfaz de Usuario</h1>
+
+<h2 class="section">6.1 Diseño y sistema de estilos</h2>
+<p>
+  El sistema de diseño está definido enteramente en <code>styles.css</code> (1 953 líneas) y
+  sigue principios del diseño de Apple HIG adaptados a robótica.
+</p>
+<table>
+  <thead><tr><th>Token</th><th>Valor</th><th>Uso</th></tr></thead>
+  <tbody>
+    <tr><td>Color primario</td><td><code>#0066CC</code></td><td>Botones, acentos, links</td></tr>
+    <tr><td>Color éxito</td><td><code>#34C759</code></td><td>Estado conectado, confirmaciones</td></tr>
+    <tr><td>Color peligro</td><td><code>#FF3B30</code></td><td>Errores, desconexión, ultimate</td></tr>
+    <tr><td>Color advertencia</td><td><code>#FF9500</code></td><td>Límites de selección</td></tr>
+    <tr><td>Fuente base</td><td><code>-apple-system, Segoe UI</code></td><td>Todo el texto</td></tr>
+    <tr><td>Radio mínimo botón</td><td>44 px</td><td>Accesibilidad táctil (WCAG)</td></tr>
+    <tr><td>Sombra base</td><td><code>0 2px 8px rgba(0,0,0,.12)</code></td><td>Cards, paneles</td></tr>
+  </tbody>
+</table>
+
+<h2 class="section">6.2 Navegación y paneles</h2>
+<p>
+  La app utiliza un <strong>Navigation Drawer</strong> lateral (hamburger menu) que muestra 5
+  secciones. Al seleccionar una, la función <code>showPanel(panelId)</code> (<em>app.js:243</em>)
+  oculta todos los paneles y muestra el solicitado mediante la clase CSS <code>.active</code>.
+</p>
+<table>
+  <thead><tr><th>Panel ID</th><th>Nombre en UI</th><th>Icono SVG</th></tr></thead>
+  <tbody>
+    <tr><td><code>game-controls</code></td><td>Controles</td><td>Gamepad</td></tr>
+    <tr><td><code>arms</code></td><td>Brazos</td><td>Robot arm</td></tr>
+    <tr><td><code>attacks</code></td><td>Ataques</td><td>Lightning bolt</td></tr>
+    <tr><td><code>buzzer</code></td><td>Sonido</td><td>Music note</td></tr>
+    <tr><td><code>calibrate</code></td><td>Calibrar</td><td>Settings sliders</td></tr>
+  </tbody>
+</table>
+
+<h2 class="section">6.3 Orientación y responsividad</h2>
+<ul>
+  <li>La app está optimizada para <strong>orientación horizontal (landscape)</strong>.</li>
+  <li>El meta tag <code>viewport</code> y la configuración Capacitor fuerzan landscape en Android.</li>
+  <li>Ancho máximo del contenido: <strong>1 200 px</strong> (centrado en pantallas grandes).</li>
+  <li>Los botones tienen un mínimo de 44×44 px para facilitar el toque en pantallas pequeñas.</li>
+  <li>Los grid layouts se colapsan a 1 columna en pantallas muy estrechas.</li>
+</ul>
+
+<!-- ══════════════════════════════════════════════
+     CHAPTER 7 – REFERENCIA DE CÓDIGO
+══════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 class="chapter">7. Referencia de Código</h1>
+
+<h2 class="section">7.1 Estado global (<code>state</code>)</h2>
+<p>
+  Toda la información de la sesión se mantiene en el objeto <code>state</code> definido al inicio
+  de <code>app.js</code>:
+</p>
+<pre><span class="kw">const</span> state = {
+  <span class="comment">// Conexión</span>
+  <span class="key">esp32IP</span>:        <span class="str">''</span>,          <span class="comment">// IP del ESP32 activo</span>
+  <span class="key">isConnected</span>:    <span class="kw">false</span>,
+
+  <span class="comment">// Navegación</span>
+  <span class="key">currentPanel</span>:   <span class="str">'game-controls'</span>,
+  <span class="key">gameMode</span>:       <span class="str">'rotate'</span>,    <span class="comment">// 'rotate' | 'walk'</span>
+
+  <span class="comment">// Joystick</span>
+  <span class="key">joystick</span>: {
+    <span class="key">isDragging</span>: <span class="kw">false</span>,
+    <span class="key">x</span>: <span class="num">0</span>, <span class="key">y</span>: <span class="num">0</span>,          <span class="comment">// Posición normalizada [-100, 100]</span>
+    <span class="key">lastUpdate</span>: <span class="num">0</span>          <span class="comment">// Timestamp del último envío</span>
+  },
+
+  <span class="comment">// Selecciones</span>
+  <span class="key">selectedAttacks</span>: [],    <span class="comment">// IDs de ataques (max 4)</span>
+  <span class="key">selectedSounds</span>:  [],    <span class="comment">// IDs de sonidos (max 4)</span>
+
+  <span class="comment">// Anti-rebote</span>
+  <span class="key">lastCommandTime</span>: {},    <span class="comment">// Mapa commandType → timestamp</span>
+  <span class="key">lastWalkCmd</span>:     <span class="kw">null</span>    <span class="comment">// Último comando walk enviado</span>
+};</pre>
+
+<h2 class="section">7.2 Funciones principales</h2>
+<table>
+  <thead><tr><th>Función</th><th>Línea</th><th>Descripción</th></tr></thead>
+  <tbody>
+    <tr><td><code>sendRequest(endpoint, params)</code></td><td>131</td><td>Realiza la petición HTTP GET al ESP32 con timeout de 2 s</td></tr>
+    <tr><td><code>addLog(message)</code></td><td>112</td><td>Registra eventos en el log interno con timestamp</td></tr>
+    <tr><td><code>connect()</code></td><td>275</td><td>Establece/verifica conexión con el ESP32</td></tr>
+    <tr><td><code>showPanel(panelId)</code></td><td>243</td><td>Cambia el panel visible en la UI</td></tr>
+    <tr><td><code>switchGameMode(mode)</code></td><td>182</td><td>Alterna entre modo joystick y D-Pad</td></tr>
+    <tr><td><code>walk(cmd)</code></td><td>324</td><td>Envía comando de desplazamiento con deduplicación</td></tr>
+    <tr><td><code>arm(cmd)</code></td><td>341</td><td>Controla los brazos del robot</td></tr>
+    <tr><td><code>headMove(cmd)</code></td><td>361</td><td>Mueve la cabeza del robot</td></tr>
+    <tr><td><code>attack(cmd)</code></td><td>491</td><td>Ejecuta ataque si está seleccionado y fuera del cooldown</td></tr>
+    <tr><td><code>playSong(songNumber)</code></td><td>632</td><td>Reproduce sonido con animación de visualizador</td></tr>
+    <tr><td><code>toggleAttackSelection(id, cb)</code></td><td>382</td><td>Gestiona la selección/deselección de ataques (límite 4)</td></tr>
+    <tr><td><code>toggleSoundSelection(id, cb)</code></td><td>528</td><td>Gestiona la selección/deselección de sonidos (límite 4)</td></tr>
+    <tr><td><code>updateOffsetDisplay(leg, value)</code></td><td>663</td><td>Actualiza el display de grados en calibración</td></tr>
+    <tr><td><code>applyOffset(leg)</code></td><td>680</td><td>Envía el offset de calibración al ESP32</td></tr>
+    <tr><td><code>handleJoystick(event)</code></td><td>784</td><td>Procesa eventos de puntero del joystick</td></tr>
+    <tr><td><code>updateJoystickVisual(dx, dy)</code></td><td>720</td><td>Actualiza la posición visual del thumb del joystick</td></tr>
+    <tr><td><code>sendJoystickUpdate()</code></td><td>736</td><td>Throttle y envío de datos del joystick al ESP32</td></tr>
+    <tr><td><code>init()</code></td><td>1080</td><td>Inicialización de la app: event listeners, estado, localStorage</td></tr>
+  </tbody>
+</table>
+
+<!-- ══════════════════════════════════════════════
+     CHAPTER 8 – SOLUCIÓN DE PROBLEMAS
+══════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 class="chapter">8. Solución de Problemas</h1>
+
+<table>
+  <thead><tr><th>Síntoma</th><th>Causa probable</th><th>Solución</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>El botón "Conectar" queda en rojo</td>
+      <td>IP incorrecta, ESP32 apagado o fuera de red</td>
+      <td>Verificar que el ESP32 esté encendido y conectado al mismo WiFi. Comprobar la IP en el router.</td>
+    </tr>
+    <tr>
+      <td>Los comandos no llegan al robot</td>
+      <td>Error CORS o firewall</td>
+      <td>Confirmar que el firmware del ESP32 incluye el header <code>Access-Control-Allow-Origin: *</code>.</td>
+    </tr>
+    <tr>
+      <td>El joystick no responde en móvil</td>
+      <td>Touch events no capturados</td>
+      <td>Verificar que el navegador soporte Pointer Events API. Usar Chrome Mobile ≥ 100.</td>
+    </tr>
+    <tr>
+      <td>Los ataques no se ejecutan</td>
+      <td>Ataque no seleccionado o cooldown activo</td>
+      <td>Seleccionar el ataque en el panel <em>Ataques</em> y esperar 400 ms entre comandos.</td>
+    </tr>
+    <tr>
+      <td>El robot se mueve de forma incorrecta en modo walk</td>
+      <td>Servos descalibrados</td>
+      <td>Usar el panel <em>Calibrar</em> para ajustar los offsets de cada pierna.</td>
+    </tr>
+    <tr>
+      <td>No se escuchan sonidos</td>
+      <td>Número de canción fuera de rango o buzzer deshabilitado en firmware</td>
+      <td>Verificar que el firmware soporte el número de canción seleccionado (1-16).</td>
+    </tr>
+    <tr>
+      <td>La APK Android no conecta al ESP32</td>
+      <td>Política de red HTTP bloqueada</td>
+      <td>Verificar que <code>capacitor.config.json</code> tenga <code>"scheme": "http"</code> y que la APK esté instalada con permisos de red local.</td>
+    </tr>
+    <tr>
+      <td>Gradlew falla en la compilación</td>
+      <td>JDK incompatible o SDK de Android desactualizado</td>
+      <td>Usar JDK 17. Ejecutar <code>npx cap sync android</code> antes de compilar.</td>
+    </tr>
+    <tr>
+      <td>La interfaz muestra orientación incorrecta</td>
+      <td>Falta de soporte landscape en el dispositivo</td>
+      <td>Forzar rotación landscape en configuración del dispositivo o verificar el meta tag viewport.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout danger">
+  <div class="callout-title">🔴 Advertencia de seguridad</div>
+  La API REST del ESP32 no implementa autenticación. <strong>No exponer la red WiFi del robot
+  a internet</strong>. Usar exclusivamente en redes locales cerradas (laboratorio, evento).
+</div>
+
+<!-- ══════════════════════════════════════════════
+     CHAPTER 9 – GLOSARIO
+══════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 class="chapter">9. Glosario</h1>
+
+<table>
+  <thead><tr><th>Término</th><th>Definición</th></tr></thead>
+  <tbody>
+    <tr><td><strong>APK</strong></td><td>Android Package – archivo de instalación de aplicación para dispositivos Android.</td></tr>
+    <tr><td><strong>Buzzer</strong></td><td>Dispositivo piezoeléctrico del robot que genera tonos PWM; se controla con el endpoint <code>/buzzer</code>.</td></tr>
+    <tr><td><strong>Capacitor</strong></td><td>Framework de Ionic que envuelve una web app en un contenedor nativo Android/iOS.</td></tr>
+    <tr><td><strong>CORS</strong></td><td><em>Cross-Origin Resource Sharing</em> – política del navegador que requiere que el servidor indique explícitamente qué orígenes pueden acceder a sus recursos.</td></tr>
+    <tr><td><strong>D-Pad</strong></td><td><em>Directional Pad</em> – botones digitales de dirección (arriba/abajo/izq/der), como en mandos de consola.</td></tr>
+    <tr><td><strong>Debounce / Cooldown</strong></td><td>Técnica para limitar la frecuencia de envío de comandos, evitando saturar el receptor.</td></tr>
+    <tr><td><strong>ESP32</strong></td><td>Microcontrolador de Espressif con WiFi integrado; actúa como cerebro y servidor HTTP del robot Otto Ninja.</td></tr>
+    <tr><td><strong>Gradle</strong></td><td>Sistema de construcción de proyectos Android; compila el código fuente y genera el APK.</td></tr>
+    <tr><td><strong>HIG</strong></td><td><em>Human Interface Guidelines</em> – guía de diseño de interfaces de Apple.</td></tr>
+    <tr><td><strong>Joystick analógico</strong></td><td>Control de entrada que reporta posición X/Y continua, como un mando de PS5.</td></tr>
+    <tr><td><strong>Offset de calibración</strong></td><td>Valor angular en grados que se suma al ángulo de reposo de un servo para compensar imprecisiones mecánicas del montaje.</td></tr>
+    <tr><td><strong>Otto Ninja</strong></td><td>Variante del robot educativo Otto con temática ninja; versión de combate con brazos articulados y cabeza giratoria.</td></tr>
+    <tr><td><strong>Pointer Events API</strong></td><td>API de navegador unificada para mouse, touch y stylus; permite un único handler para desktop y móvil.</td></tr>
+    <tr><td><strong>PWM</strong></td><td><em>Pulse Width Modulation</em> – técnica para controlar servos y el buzzer mediante señales de ancho de pulso variable.</td></tr>
+    <tr><td><strong>Query string</strong></td><td>Parte de una URL tras el carácter <code>?</code> que contiene parámetros clave=valor.</td></tr>
+    <tr><td><strong>REST API</strong></td><td><em>Representational State Transfer</em> – estilo de API que usa endpoints HTTP para operaciones CRUD.</td></tr>
+    <tr><td><strong>Servo</strong></td><td>Motor de precisión controlado por PWM que gira a un ángulo específico; utilizado en articulaciones del robot.</td></tr>
+    <tr><td><strong>Throttling</strong></td><td>Limitación de la tasa de eventos; similar al debounce pero permite eventos periódicos en lugar de solo el último.</td></tr>
+    <tr><td><strong>www/</strong></td><td>Directorio de assets web compilados que Capacitor copia al proyecto Android.</td></tr>
+  </tbody>
+</table>
+
+<div style="margin-top: 20mm; border-top: 2px solid var(--blue-light); padding-top: 8mm; text-align: center; color: var(--gray-400); font-size: 9pt;">
+  <p>Otto Ninja Pro Controller · Manual Técnico v2.0.0</p>
+  <p>Laboratorio de Robótica · Documento de uso interno · 2025</p>
+  <p style="margin-top:3mm; font-family: var(--mono); font-size: 8pt;">
+    app.js · index.html · styles.css · capacitor.config.json · package.json
+  </p>
+</div>
+
+</body>
+</html>
