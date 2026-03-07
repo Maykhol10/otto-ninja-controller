@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -72,8 +72,14 @@
                         </div>
                     </button>
                     <button class="nav-drawer-item" data-panel="ultrasonic">
-                        <div class="nav-item-icon" style="background: rgba(142, 142, 147, 0.2) !important; box-shadow: none !important;">
-                            <img src="sensor2.png" alt="Sensor" style="width: 28px; height: 28px; object-fit: contain;">
+                        <div class="nav-item-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M6.3 6.3a8 8 0 0 0 0 11.4"/>
+                                <path d="M17.7 6.3a8 8 0 0 1 0 11.4"/>
+                                <path d="M3.5 3.5a13 13 0 0 0 0 17"/>
+                                <path d="M20.5 3.5a13 13 0 0 1 0 17"/>
+                            </svg>
                         </div>
                         <div class="nav-item-content">
                             <span class="nav-item-title">Sensor</span>
@@ -89,7 +95,15 @@
                             <span class="nav-item-desc">Ajustes de servo</span>
                         </div>
                     </button>
-                </div>
+                    <button class="nav-drawer-item" data-panel="firmware">
+                        <div class="nav-item-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </div>
+                        <div class="nav-item-content">
+                            <span class="nav-item-title">Firmware</span>
+                            <span class="nav-item-desc">CÃ³digo del ESP32</span>
+                        </div>
+                    </button>                </div>
             </div>
         </nav>
 
@@ -164,18 +178,12 @@
                     <div class="card-content-centered">
                         <!-- Joystick Section -->
                         <div class="game-mode-section" id="mode-rotate">
-                            <!-- First Column: Display Messages + Bitmap -->
+                            <!-- First Column: Display Messages -->
                             <div class="left-panel-display">
                                 <div class="quick-display-container">
                                     <h4 class="quick-display-title">Mensajes</h4>
                                     <div class="quick-display-grid" id="quickDisplayRotate">
                                         <p class="no-display-message">Selecciona hasta 4 mensajes</p>
-                                    </div>
-                                </div>
-                                <div class="quick-bitmap-slot">
-                                    <h4 class="quick-bitmap-slot-title">Bitmap</h4>
-                                    <div class="quick-bitmap-slot-content" id="quickBitmapRotate">
-                                        <p class="no-bitmaps-message">Selecciona 1 bitmap</p>
                                     </div>
                                 </div>
                             </div>
@@ -238,18 +246,12 @@
 
                         <!-- D-Pad Section -->
                         <div class="game-mode-section active" id="mode-walk">
-                            <!-- First Column: Display Messages + Bitmap -->
+                            <!-- First Column: Display Messages -->
                             <div class="left-panel-display">
                                 <div class="quick-display-container">
                                     <h4 class="quick-display-title">Mensajes</h4>
                                     <div class="quick-display-grid" id="quickDisplayWalk">
                                         <p class="no-display-message">Selecciona hasta 4 mensajes</p>
-                                    </div>
-                                </div>
-                                <div class="quick-bitmap-slot">
-                                    <h4 class="quick-bitmap-slot-title">Bitmap</h4>
-                                    <div class="quick-bitmap-slot-content" id="quickBitmapWalk">
-                                        <p class="no-bitmaps-message">Selecciona 1 bitmap</p>
                                     </div>
                                 </div>
                             </div>
@@ -954,10 +956,6 @@
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                                         Enviar al robot
                                     </button>
-                                    <button class="bitmap-btn-save" id="bitmapSaveBtn">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                                        Guardar
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -969,15 +967,6 @@
                                 <span class="bitmap-code-size" id="bitmapCodeSize">1024 bytes</span>
                             </div>
                             <pre class="bitmap-code-output" id="bitmapCodeOutput"></pre>
-                        </div>
-
-                        <!-- Saved Bitmaps Gallery -->
-                        <div class="saved-bitmaps-section" style="margin-top: 20px;">
-                            <h4 class="saved-bitmaps-title">Bitmaps Guardados</h4>
-                            <p class="saved-bitmaps-hint">Tocá una imagen para enviarla al robot. Usá ★ para agregarla al panel principal.</p>
-                            <div class="saved-bitmaps-gallery" id="savedBitmapsGallery">
-                                <p class="no-saved-bitmaps">No hay bitmaps guardados</p>
-                            </div>
                         </div>
                     </div>
 
@@ -1001,7 +990,7 @@
                     <!-- Lectura en vivo -->
                     <div class="us-live-section">
                         <div class="us-sensor-img-wrap" id="usSensorImgWrap">
-                            <img src="sensor2.png" alt="Sensor Ultrasonido" class="us-sensor-img" id="usSensorImg">
+                            <img src="sensor1.png" alt="Sensor Ultrasonido" class="us-sensor-img" id="usSensorImg">
                         </div>
                         <div class="us-reading-display">
                             <span class="us-distance-value" id="usDistanceValue">--</span>
@@ -1182,6 +1171,56 @@
                             <button class="arm-btn" data-action="calibrate" data-cmd="apply-both">Aplicar Ambos</button>
                             <button class="arm-btn" data-action="calibrate" data-cmd="reset">Reset</button>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Firmware Panel -->
+            <div class="content-panel" id="firmware">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Código del ESP32</h2>
+                    </div>
+                    <div class="calibrate-section">
+                        <p style="color:var(--text-secondary);margin-bottom:16px;font-size:14px;">
+                            Descarga el firmware para tu Otto Ninja y cárgalo con Arduino IDE o PlatformIO.
+                            Asegúrate de instalar las librerías necesarias antes de compilar.
+                        </p>
+
+                        <div style="display:flex;flex-direction:column;gap:12px;">
+
+                            <div style="background:var(--surface-2,#1e1e2e);border-radius:12px;padding:16px;">
+                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                                    <div>
+                                        <div style="font-weight:600;font-size:15px;">Con pantalla OLED</div>
+                                        <div style="color:var(--text-secondary);font-size:12px;margin-top:2px;">Incluye display SSD1306 — muestra expresiones y mensajes</div>
+                                    </div>
+                                    <a href="otto_ninja_con_oled.zip" download="otto_ninja_con_oled.zip" class="arm-btn" style="text-decoration:none;padding:10px 18px;">
+                                        ⬇ Descargar
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div style="background:var(--surface-2,#1e1e2e);border-radius:12px;padding:16px;">
+                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                                    <div>
+                                        <div style="font-weight:600;font-size:15px;">Sin pantalla OLED</div>
+                                        <div style="color:var(--text-secondary);font-size:12px;margin-top:2px;">Versión ligera — sin display, menor consumo de memoria</div>
+                                    </div>
+                                    <a href="otto_ninja_sin_oled.zip" download="otto_ninja_sin_oled.zip" class="arm-btn" style="text-decoration:none;padding:10px 18px;">
+                                        ⬇ Descargar
+                                    </a>
+                                </div>
+                            </div>
+
+                            
+
+
+                        </div>
+
+                        <p style="color:var(--text-secondary);margin-top:16px;font-size:12px;border-top:1px solid var(--border-color,#333);padding-top:12px;">
+                            📦 Librerías requeridas: <strong>Otto</strong>, <strong>Adafruit SSD1306</strong>, <strong>Adafruit GFX</strong>, <strong>ArduinoJson</strong>
+                        </p>
                     </div>
                 </div>
             </div>

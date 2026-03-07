@@ -17,7 +17,7 @@ const state = {
     selectedSounds: new Set(),
     maxSelectedSounds: 4,
     selectedDisplayMessages: new Set(),
-    maxSelectedDisplayMessages: 4,
+    maxSelectedDisplayMessages: 3,
     customMessages: [], // Array de mensajes personalizados
     customMelodies: {}, // Melodías MIDI importadas { 16: {name, notes}, 17: ... }
     savedBitmaps: [], // Array de bitmaps guardados { name, title, titleInvert, invert, data, preview }
@@ -641,17 +641,7 @@ function updateQuickSounds() {
 
     // Create buttons for each selected sound
     state.selectedSounds.forEach(soundId => {
-        let data = soundData[soundId];
-
-        // If not in predefined sounds, check custom melodies
-        if (!data && state.customMelodies[soundId]) {
-            const customMelody = state.customMelodies[soundId];
-            data = {
-                icon: '🎵',
-                name: customMelody.name || `Custom ${soundId}`
-            };
-        }
-
+        const data = soundData[soundId];
         if (!data) return;
 
         // Create button
@@ -1061,7 +1051,7 @@ function updateQuickDisplayMessages() {
 
     // If no messages selected, show message
     if (state.selectedDisplayMessages.size === 0) {
-        const message = '<p class="no-display-message">Selecciona hasta 4 mensajes</p>';
+        const message = '<p class="no-display-message">Selecciona hasta 3 mensajes</p>';
         quickDisplayRotate.innerHTML = message;
         quickDisplayWalk.innerHTML = message;
         return;
