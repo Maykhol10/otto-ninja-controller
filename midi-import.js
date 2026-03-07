@@ -1615,6 +1615,9 @@ function initMidiImport() {
 
     // Cargar melodías guardadas
     loadCustomMelodiesFromStorage();
+    if (typeof window.renderCustomMelodyCards === 'function') {
+        window.renderCustomMelodyCards();
+    }
 
     // Resize handler para waveform
     window.addEventListener('resize', function() {
