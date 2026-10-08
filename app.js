@@ -13,6 +13,8 @@ const state = {
     currentOffsetRight: 0,
     currentRollLeft: 0,
     currentRollRight: 0,
+    currentWalkSpeed: 40,
+    currentWalkTilt: 30,
     drawerOpen: false,
     selectedAttacks: new Set(),
     maxSelectedAttacks: 4,
@@ -110,6 +112,10 @@ const elements = {
     rollOffsetRight: document.getElementById('rollOffsetRight'),
     rollOffsetLeftValue: document.getElementById('rollOffsetLeftValue'),
     rollOffsetRightValue: document.getElementById('rollOffsetRightValue'),
+    walkSpeed: document.getElementById('walkSpeed'),
+    walkTilt: document.getElementById('walkTilt'),
+    walkSpeedValue: document.getElementById('walkSpeedValue'),
+    walkTiltValue: document.getElementById('walkTiltValue'),
     attacksCounter: document.getElementById('attacksCounter'),
     attackCheckboxes: document.querySelectorAll('.attack-checkbox-input'),
     attackCards: document.querySelectorAll('.attack-card'),
@@ -2265,6 +2271,42 @@ function resetRollOffsets() {
 }
 
 /**
+ * Update walk calibration display
+ * @param {string} key - 'Speed' or 'Tilt'
+ * @param {number} value - Slider value
+ */
+function updateWalkDisplay(key, value) {
+    const valueElement = elements[`walk${key}Value`];
+    if (valueElement) valueElement.innerText = key === 'Tilt' ? `${value}°` : `${value}`;
+    state[`currentWalk${key}`] = parseInt(value);
+}
+
+/**
+ * Apply walk calibration (foot speed and leg tilt)
+ */
+async function applyWalkConfig() {
+    addLog(`⚙️ CAMINATA: velocidad=${state.currentWalkSpeed} inclinación=${state.currentWalkTilt}°`);
+    const success = await sendRequest('walkcfg', {
+        speed: state.currentWalkSpeed,
+        tilt: state.currentWalkTilt
+    });
+    if (!success) {
+        addLog(`⚠️ No se pudo aplicar la calibración de caminata. Verifica la conexión.`);
+    }
+}
+
+/**
+ * Reset walk calibration to defaults
+ */
+function resetWalkConfig() {
+    elements.walkSpeed.value = 40;
+    elements.walkTilt.value = 30;
+    updateWalkDisplay('Speed', 40);
+    updateWalkDisplay('Tilt', 30);
+    applyWalkConfig();
+}
+
+/**
  * Reset all offsets
  */
 function resetOffsets() {
@@ -2661,6 +2703,8 @@ function setupEventListeners() {
             else if (cmd === 'reset') resetOffsets();
             else if (cmd === 'apply-roll') applyRollOffsets();
             else if (cmd === 'reset-roll') resetRollOffsets();
+            else if (cmd === 'apply-walk') applyWalkConfig();
+            else if (cmd === 'reset-walk') resetWalkConfig();
         });
     });
 
@@ -2670,6 +2714,14 @@ function setupEventListeners() {
     }
     if (elements.rollOffsetRight) {
         elements.rollOffsetRight.addEventListener('input', (e) => updateRollDisplay('Right', e.target.value));
+    }
+
+    // Walk calibration sliders
+    if (elements.walkSpeed) {
+        elements.walkSpeed.addEventListener('input', (e) => updateWalkDisplay('Speed', e.target.value));
+    }
+    if (elements.walkTilt) {
+        elements.walkTilt.addEventListener('input', (e) => updateWalkDisplay('Tilt', e.target.value));
     }
 
     // Offset sliders
