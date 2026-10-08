@@ -11,6 +11,8 @@ const state = {
     currentMode: "game-controls",
     currentOffsetLeft: 0,
     currentOffsetRight: 0,
+    currentRollLeft: 0,
+    currentRollRight: 0,
     drawerOpen: false,
     selectedAttacks: new Set(),
     maxSelectedAttacks: 4,
@@ -104,6 +106,10 @@ const elements = {
     offsetRight: document.getElementById('offsetRight'),
     offsetLeftValue: document.getElementById('offsetLeftValue'),
     offsetRightValue: document.getElementById('offsetRightValue'),
+    rollOffsetLeft: document.getElementById('rollOffsetLeft'),
+    rollOffsetRight: document.getElementById('rollOffsetRight'),
+    rollOffsetLeftValue: document.getElementById('rollOffsetLeftValue'),
+    rollOffsetRightValue: document.getElementById('rollOffsetRightValue'),
     attacksCounter: document.getElementById('attacksCounter'),
     attackCheckboxes: document.querySelectorAll('.attack-checkbox-input'),
     attackCards: document.querySelectorAll('.attack-card'),
@@ -2213,6 +2219,42 @@ async function applyBothOffsets() {
 }
 
 /**
+ * Update roll-mode leg offset display
+ * @param {string} leg - 'Left' or 'Right'
+ * @param {number} value - Offset value
+ */
+function updateRollDisplay(leg, value) {
+    const valueElement = elements[`rollOffset${leg}Value`];
+    if (valueElement) valueElement.innerText = `${value}°`;
+    state[`currentRoll${leg}`] = parseInt(value);
+}
+
+/**
+ * Apply roll-mode leg offsets
+ */
+async function applyRollOffsets() {
+    addLog(`⚙️ RODAR: L=${state.currentRollLeft}° R=${state.currentRollRight}°`);
+    const success = await sendRequest('offset', {
+        rollLeft: state.currentRollLeft,
+        rollRight: state.currentRollRight
+    });
+    if (!success) {
+        addLog(`⚠️ No se pudo aplicar la calibración de rodar. Verifica la conexión.`);
+    }
+}
+
+/**
+ * Reset roll-mode leg offsets
+ */
+function resetRollOffsets() {
+    elements.rollOffsetLeft.value = 0;
+    elements.rollOffsetRight.value = 0;
+    updateRollDisplay('Left', 0);
+    updateRollDisplay('Right', 0);
+    applyRollOffsets();
+}
+
+/**
  * Reset all offsets
  */
 function resetOffsets() {
@@ -2607,8 +2649,18 @@ function setupEventListeners() {
             else if (cmd === 'apply-right') applyOffset('right');
             else if (cmd === 'apply-both') applyBothOffsets();
             else if (cmd === 'reset') resetOffsets();
+            else if (cmd === 'apply-roll') applyRollOffsets();
+            else if (cmd === 'reset-roll') resetRollOffsets();
         });
     });
+
+    // Roll-mode offset sliders
+    if (elements.rollOffsetLeft) {
+        elements.rollOffsetLeft.addEventListener('input', (e) => updateRollDisplay('Left', e.target.value));
+    }
+    if (elements.rollOffsetRight) {
+        elements.rollOffsetRight.addEventListener('input', (e) => updateRollDisplay('Right', e.target.value));
+    }
 
     // Offset sliders
     if (elements.offsetLeft) {

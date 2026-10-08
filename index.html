@@ -1182,6 +1182,25 @@
                             <button class="arm-btn" data-action="calibrate" data-cmd="apply-both">Aplicar Ambos</button>
                             <button class="arm-btn" data-action="calibrate" data-cmd="reset">Reset</button>
                         </div>
+                        <h3 class="card-title" style="margin-top: 24px; font-size: 1rem;">Piernas en modo Rodar</h3>
+                        <div class="slider-container">
+                            <div class="slider-header">
+                                <span class="slider-label">Rodar Izq (base 180°)</span>
+                                <span class="slider-value" id="rollOffsetLeftValue">0°</span>
+                            </div>
+                            <input type="range" class="custom-slider" id="rollOffsetLeft" min="-90" max="90" value="0">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-header">
+                                <span class="slider-label">Rodar Der (base 90°)</span>
+                                <span class="slider-value" id="rollOffsetRightValue">0°</span>
+                            </div>
+                            <input type="range" class="custom-slider" id="rollOffsetRight" min="-90" max="90" value="0">
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                            <button class="arm-btn" data-action="calibrate" data-cmd="apply-roll">Aplicar Rodar</button>
+                            <button class="arm-btn" data-action="calibrate" data-cmd="reset-roll">Reset Rodar</button>
+                        </div>
                     </div>
                 </div>
             </div>
