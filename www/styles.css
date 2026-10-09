@@ -4864,6 +4864,9 @@ body::before {
 .saved-bitmap-select-btn.active { color: var(--warning, #FF9500); background: rgba(255, 149, 0, 0.15); border-color: var(--warning, #FF9500); }
 .saved-bitmap-delete-btn:hover { color: var(--danger, #FF3B30); border-color: var(--danger, #FF3B30); }
 
+/* Panel sensor: distancia en vivo del modo automatico */
+.us-auto-dist { font-variant-numeric: tabular-nums; margin-left: 4px; }
+
 /* Panel sensor: texto del modo automatico */
 .us-auto-desc {
     margin: 0;

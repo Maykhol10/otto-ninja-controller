@@ -282,10 +282,12 @@ function showPanel(panelId) {
         return;
     }
 
-    // Stop the sensor test when leaving the ultrasonic panel
+    // Stop the sensor readings when leaving the ultrasonic panel (the robot keeps going)
     if (state.currentMode === 'ultrasonic' && panelId !== 'ultrasonic') {
         stopUltrasonicTest();
+        stopAutoPoll();
     }
+    if (panelId === 'ultrasonic' && usState.autoOn) startAutoPoll();
 
     elements.panels.forEach(panel => {
         if (panel) panel.classList.remove('active');
@@ -1780,7 +1782,8 @@ function volumeDown() {
 
 const usState = {
     testInterval: null,
-    autoOn: false
+    autoOn: false,
+    autoInterval: null
 };
 
 /**
@@ -1841,14 +1844,51 @@ function stopUltrasonicTest() {
     if (stopBtn)  stopBtn.disabled = true;
 }
 
-async function setUltrasonicAuto(on) {
-    const ok = await sendRequest('ultrasonic', { action: 'auto', on: on ? 1 : 0 });
-    if (!ok) return;
+function showAutoState(on) {
     usState.autoOn = on;
     document.getElementById('usAutoStartBtn').disabled = on;
     document.getElementById('usAutoStopBtn').disabled = !on;
     document.getElementById('usAutoDot').className = 'us-test-dot' + (on ? ' running' : '');
     document.getElementById('usAutoStatus').textContent = on ? 'Caminando solo…' : 'Detenido';
+    if (!on) document.getElementById('usAutoDist').textContent = '';
+}
+
+async function setUltrasonicAuto(on) {
+    const ok = await sendRequest('ultrasonic', { action: 'auto', on: on ? 1 : 0 });
+    if (!ok) return;
+    showAutoState(on);
+    if (on) startAutoPoll(); else stopAutoPoll();
+}
+
+/**
+ * While auto mode runs: show the distance and what the robot is doing
+ */
+async function fetchAutoStatus() {
+    if (!state.connected || !state.espIP) return;
+    try {
+        const resp = await fetch(`http://${state.espIP}/ultrasonic?action=read`, { signal: AbortSignal.timeout(2000) });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (!data.auto) { showAutoState(false); stopAutoPoll(); return; }   // se apago desde el robot o con un comando manual
+        const dist = parseInt(data.distance);
+        const phase = data.task === 'walk_backward' ? 'Obstáculo → retrocede'
+                    : data.task === 'walk_right' ? 'Esquivando → gira a la derecha' : 'Caminando';
+        document.getElementById('usAutoStatus').textContent = phase;
+        const d = document.getElementById('usAutoDist');
+        d.textContent = dist > 0 ? `· ${dist} cm` : '· nada al frente';
+        d.style.color = dist > 0 && dist <= 20 ? '#ff3b30' : '#34c759';
+    } catch (e) { /* sin respuesta: se reintenta en la siguiente lectura */ }
+}
+
+function startAutoPoll() {
+    if (usState.autoInterval) return;
+    fetchAutoStatus();
+    usState.autoInterval = setInterval(fetchAutoStatus, 400);
+}
+
+function stopAutoPoll() {
+    clearInterval(usState.autoInterval);
+    usState.autoInterval = null;
 }
 
 function initUltrasonicPanel() {
