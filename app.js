@@ -179,7 +179,7 @@ function setTwin(on) {
     try { localStorage.setItem('otto-twin', on ? 'on' : 'off'); } catch (e) {}
     const frame = document.getElementById('twinFrame');
     if (!frame) return;
-    if (on && !frame.getAttribute('src')) frame.src = 'simulador/index.html?twin=1';
+    if (on && !frame.getAttribute('src')) frame.src = 'simulador/index.html?twin=1&v=202610090451';
     if (!on) frame.removeAttribute('src');
     frame.hidden = !on;
     document.getElementById('twinOff').hidden = on;
