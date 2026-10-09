@@ -4926,3 +4926,87 @@ body::before {
 @media (orientation: portrait) {
     #ultrasonic.active { flex-direction: column; }
 }
+
+/* ===== Inicio con gemelo digital =====
+   izquierda: acciones en pestañas (pulgar izq) · centro: robot 3D · derecha: movimiento (pulgar der) */
+#game-controls .card-header { display: none; }
+#game-controls .card { padding: 10px !important; max-height: none !important; height: 100%; overflow: hidden !important; }
+#game-controls .home-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.35fr) minmax(0, 0.9fr);
+    grid-template-areas: "quick twin move";
+    gap: 10px; height: 100%; min-height: 0; width: 100%; padding: 0 !important; align-items: stretch;
+}
+#game-controls .game-mode-section { display: none !important; }
+#game-controls .game-mode-section.active { display: contents !important; }
+#game-controls .home-quick {
+    grid-area: quick; display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0;
+    background: rgba(255, 255, 255, 0.04); border-radius: 14px; padding: 8px;
+}
+.home-tabs { display: flex; gap: 4px; background: rgba(142, 142, 147, 0.14); border-radius: 10px; padding: 3px; flex: none; }
+.home-tab {
+    flex: 1; border: none; border-radius: 8px; padding: 7px 4px; background: transparent; color: var(--text-secondary, #9aa0aa);
+    font: 600 12px/1 -apple-system, 'Segoe UI', sans-serif; cursor: pointer;
+}
+.home-tab.on { background: var(--primary, #007AFF); color: #fff; }
+#game-controls .home-quick > .left-panel-display,
+#game-controls .home-quick > .left-panel-sounds,
+#game-controls .home-quick > .center-panel-attacks { display: none !important; }
+#game-controls .home-quick[data-show="display"] > .left-panel-display,
+#game-controls .home-quick[data-show="sounds"] > .left-panel-sounds,
+#game-controls .home-quick[data-show="attacks"] > .center-panel-attacks {
+    display: flex !important; flex-direction: column; flex: 1; min-height: 0; width: auto !important; max-width: none !important;
+    margin: 0 !important; padding: 0 !important; background: none !important; border: none !important; box-shadow: none !important; overflow: auto;
+}
+#game-controls .home-quick h4 { display: none; }
+#game-controls .home-quick [class^="quick-"][class$="-container"] { flex: 1; min-height: 0; margin: 0 !important; padding: 0 !important; background: none !important; border: none !important; box-shadow: none !important; }
+#game-controls .home-quick [class$="-grid"] { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+#game-controls .right-panel {
+    grid-area: move; display: flex !important; flex-direction: column; justify-content: center; align-items: center; gap: 10px;
+    min-width: 0; min-height: 0; width: auto !important; margin: 0 !important; padding: 0 !important;
+}
+#game-controls .walk-controls .arm-btn { width: auto !important; padding-inline: 18px; }
+.home-twin { grid-area: twin; position: relative; min-width: 0; min-height: 0; border-radius: 16px; overflow: hidden; background: #0d0f13; }
+.home-twin iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.twin-off { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #8e8e93; font-size: 13px; }
+.twin-off img { width: 64px; opacity: 0.5; }
+.twin-bar { position: absolute; left: 8px; right: 8px; top: 8px; display: flex; align-items: center; gap: 6px; pointer-events: none; }
+.twin-badge { margin-right: auto; display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 -apple-system, 'Segoe UI', sans-serif; color: #e5e5ea; background: rgba(0, 0, 0, 0.45); padding: 6px 9px; border-radius: 20px; }
+.twin-badge i { width: 7px; height: 7px; border-radius: 50%; background: #34c759; box-shadow: 0 0 6px #34c759; }
+.twin-btn { pointer-events: auto; width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(0, 0, 0, 0.45); color: #fff; font-size: 15px; cursor: pointer; }
+.twin-btn[hidden] { display: none; }
+
+/* Encabezado en una sola fila cuando la pantalla es baja (celular horizontal) */
+@media (orientation: landscape) and (max-height: 540px) {
+    .header { flex-wrap: nowrap !important; padding: 6px 10px !important; min-height: 0 !important; margin-bottom: 8px !important; gap: 8px !important; }
+    .header-title { display: none !important; }
+    .robot-logo { width: 34px !important; height: 34px !important; }
+    .status-bar { flex-wrap: nowrap !important; gap: 8px !important; justify-content: flex-end !important; }
+    .ip-input { max-width: 130px !important; min-width: 0 !important; }
+    .lab-logo-container { display: none !important; }
+}
+
+/* Vertical: robot arriba, movimiento y acciones debajo */
+@media (orientation: portrait) {
+    #game-controls .home-grid { grid-template-columns: 1fr 1fr; grid-template-rows: minmax(220px, 42vh) auto; grid-template-areas: "twin twin" "quick move"; }
+}
+
+/* Inicio: ajustes para que todo quepa en un celular horizontal */
+.twin-off[hidden], .home-twin iframe[hidden] { display: none !important; }
+#game-controls .mode-toggle-container { margin: 0 !important; }
+#game-controls .mode-toggle-btn { padding: 6px 12px !important; font-size: 12px !important; }
+#game-controls .d-pad {
+    --dp: clamp(42px, 13vh, 64px);
+    grid-template-columns: repeat(3, var(--dp)) !important; grid-template-rows: repeat(3, var(--dp)) !important;
+    gap: 6px !important; width: auto !important; height: auto !important; margin: 0 !important;
+}
+#game-controls .d-pad-btn { width: var(--dp) !important; height: var(--dp) !important; min-width: 0 !important; font-size: 18px !important; }
+#game-controls .d-pad-home { font-size: 20px !important; }
+#game-controls .walk-controls { gap: 0 !important; margin: 0 !important; }
+#game-controls .walk-controls > .arm-btn { display: none !important; }   /* Inicio va en el centro de la cruceta */
+#game-controls .joystick-container { gap: 0 !important; }
+#game-controls .stats-display { display: none !important; }
+.twin-btn { display: inline-flex; align-items: center; justify-content: center; }
+#game-controls .joystick-container, #game-controls .joystick-wrapper { margin: 0 !important; padding: 0 !important; }
+#game-controls .right-panel { gap: 8px !important; justify-content: space-evenly !important; }
+#game-controls .joystick-wrapper { width: clamp(130px, 40vh, 180px) !important; height: clamp(130px, 40vh, 180px) !important; }

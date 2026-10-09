@@ -161,10 +161,29 @@
                         </h2>
                     </div>
 
-                    <div class="card-content-centered">
+                    <div class="card-content-centered home-grid">
+                        <!-- Gemelo digital: el simulador repite cada comando que se envia al robot -->
+                        <div class="home-twin" id="homeTwin">
+                            <iframe id="twinFrame" title="Gemelo digital del robot" loading="lazy"></iframe>
+                            <div class="twin-off" id="twinOff" hidden>
+                                <img src="OTTO_NINJA.png" alt="">
+                                <span>Gemelo digital apagado</span>
+                            </div>
+                            <div class="twin-bar">
+                                <span class="twin-badge"><i id="twinDot"></i>Gemelo digital</span>
+                                <button class="twin-btn" id="twinReset" title="Volver a poner el robot virtual en el centro">⟲</button>
+                                <button class="twin-btn" id="twinToggle" title="Apagar o encender el gemelo (ahorra batería)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v9"/><path d="M6.3 7.2a8 8 0 1 0 11.4 0"/></svg></button>
+                            </div>
+                        </div>
                         <!-- Joystick Section -->
                         <div class="game-mode-section" id="mode-rotate">
-                            <!-- First Column: Display Messages + Bitmap -->
+                            <!-- Acciones rapidas en pestañas (pulgar izquierdo) -->
+                            <div class="home-quick" data-show="attacks">
+                            <div class="home-tabs">
+                                <button class="home-tab on" data-qtab="attacks">Ataques</button>
+                                <button class="home-tab" data-qtab="sounds">Sonidos</button>
+                                <button class="home-tab" data-qtab="display">Mensajes</button>
+                            </div>
                             <div class="left-panel-display">
                                 <div class="quick-display-container">
                                     <h4 class="quick-display-title">Mensajes</h4>
@@ -200,6 +219,7 @@
                                 </div>
                             </div>
 
+                            </div>
                             <!-- Fourth Column: Mode Toggle + Joystick -->
                             <div class="right-panel">
                                 <div class="mode-toggle-container">
@@ -238,7 +258,13 @@
 
                         <!-- D-Pad Section -->
                         <div class="game-mode-section active" id="mode-walk">
-                            <!-- First Column: Display Messages + Bitmap -->
+                            <!-- Acciones rapidas en pestañas (pulgar izquierdo) -->
+                            <div class="home-quick" data-show="attacks">
+                            <div class="home-tabs">
+                                <button class="home-tab on" data-qtab="attacks">Ataques</button>
+                                <button class="home-tab" data-qtab="sounds">Sonidos</button>
+                                <button class="home-tab" data-qtab="display">Mensajes</button>
+                            </div>
                             <div class="left-panel-display">
                                 <div class="quick-display-container">
                                     <h4 class="quick-display-title">Mensajes</h4>
@@ -274,6 +300,7 @@
                                 </div>
                             </div>
 
+                            </div>
                             <!-- Fourth Column: Mode Toggle + D-Pad -->
                             <div class="right-panel">
                                 <div class="mode-toggle-container">
@@ -295,7 +322,7 @@
                                         <button class="d-pad-btn" data-action="walk" data-cmd="forward">▲</button>
                                         <div></div>
                                         <button class="d-pad-btn" data-action="walk" data-cmd="left">◄</button>
-                                        <div class="d-pad-btn d-pad-center"></div>
+                                        <button class="d-pad-btn d-pad-home" data-action="walk" data-cmd="home" title="Inicio: postura recta">🏠</button>
                                         <button class="d-pad-btn" data-action="walk" data-cmd="right">►</button>
                                         <div></div>
                                         <button class="d-pad-btn" data-action="walk" data-cmd="backward">▼</button>

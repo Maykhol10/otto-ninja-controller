@@ -162,7 +162,68 @@ function addLog(message) {
  * @param {string} endpoint - API endpoint
  * @param {Object} params - Query parameters
  */
+// ========== GEMELO DIGITAL ==========
+// El simulador 3D (simulador/index.html?twin=1) repite cada comando: funciona tambien sin robot conectado.
+const TWIN_SKIP = new Set(['buzzer', 'message', 'melody', 'bitmap', 'status']);
+let twinOn = true;
+try { twinOn = localStorage.getItem('otto-twin') !== 'off'; } catch (e) {}
+
+function twinSend(endpoint, params = {}) {
+    if (!twinOn || TWIN_SKIP.has(endpoint)) return;
+    const frame = document.getElementById('twinFrame');
+    if (frame && frame.contentWindow) frame.contentWindow.postMessage({ otto: `/${endpoint}?${new URLSearchParams(params)}` }, '*');
+}
+
+function setTwin(on) {
+    twinOn = on;
+    try { localStorage.setItem('otto-twin', on ? 'on' : 'off'); } catch (e) {}
+    const frame = document.getElementById('twinFrame');
+    if (!frame) return;
+    if (on && !frame.getAttribute('src')) frame.src = 'simulador/index.html?twin=1';
+    if (!on) frame.removeAttribute('src');
+    frame.hidden = !on;
+    document.getElementById('twinOff').hidden = on;
+    document.getElementById('twinReset').hidden = !on;
+}
+
+function initHomeLayout() {
+    setTwin(twinOn);
+    document.getElementById('twinToggle')?.addEventListener('click', () => setTwin(!twinOn));
+    document.getElementById('twinReset')?.addEventListener('click', () => {
+        document.getElementById('twinFrame')?.contentWindow?.postMessage({ ottoReset: true }, '*');
+    });
+    // Pestañas de acciones rapidas: la eleccion se recuerda y vale para Rodar y Caminar
+    let tab = 'attacks';
+    try { tab = localStorage.getItem('otto-home-tab') || 'attacks'; } catch (e) {}
+    const show = t => {
+        document.querySelectorAll('.home-quick').forEach(q => { q.dataset.show = t; });
+        document.querySelectorAll('.home-tab').forEach(b => b.classList.toggle('on', b.dataset.qtab === t));
+        try { localStorage.setItem('otto-home-tab', t); } catch (e) {}
+    };
+    document.querySelectorAll('.home-tab').forEach(b => b.addEventListener('click', () => show(b.dataset.qtab)));
+    show(tab);
+}
+
+function restoreQuickSelections() {
+    const load = (key, def) => {
+        try { const v = JSON.parse(localStorage.getItem(key)); if (Array.isArray(v)) return v; } catch (e) {}
+        return def;
+    };
+    load('ottoNinja_quickAttacks', ['slash', 'uppercut', 'stab', 'defense']).slice(0, state.maxSelectedAttacks).forEach(id => {
+        if (!attackData[id]) return;
+        state.selectedAttacks.add(id);
+        const c = document.getElementById('attack-' + id); if (c) c.checked = true;
+    });
+    load('ottoNinja_quickSounds', ['5', '3', '11', '7']).slice(0, state.maxSelectedSounds).forEach(id => {
+        state.selectedSounds.add(String(id));
+        const c = document.getElementById('buzzer-' + id); if (c) c.checked = true;
+    });
+    try { updateAttacksUI(); } catch (e) {}
+}
+
 async function sendRequest(endpoint, params = {}) {
+    twinSend(endpoint, params);
+
     if (!state.espIP) {
         addLog("⚠️ Ingresa una IP válida");
         return false;
@@ -237,10 +298,9 @@ async function switchGameMode(mode) {
     }
 
     // Enviar comando al ESP32
-    if (state.connected) {
-        const modeCmd = mode === 'rotate' ? 'rodar' : 'caminar';
-        await sendRequest('mode', { cmd: modeCmd });
-    }
+    const modeCmd = mode === 'rotate' ? 'rodar' : 'caminar';
+    if (state.connected) await sendRequest('mode', { cmd: modeCmd });
+    else twinSend('mode', { cmd: modeCmd });
 }
 
 /**
@@ -494,6 +554,7 @@ function updateAttacksUI() {
  * Update quick attacks containers with selected attacks
  */
 function updateQuickAttacks() {
+    try { localStorage.setItem('ottoNinja_quickAttacks', JSON.stringify([...state.selectedAttacks])); } catch (e) {}
     const quickAttacksRotate = document.getElementById('quickAttacksRotate');
     const quickAttacksWalk = document.getElementById('quickAttacksWalk');
 
@@ -637,6 +698,7 @@ function updateSoundsUI() {
  * Update quick sounds containers with selected sounds
  */
 function updateQuickSounds() {
+    try { localStorage.setItem('ottoNinja_quickSounds', JSON.stringify([...state.selectedSounds])); } catch (e) {}
     const quickSoundsRotate = document.getElementById('quickSoundsRotate');
     const quickSoundsWalk = document.getElementById('quickSoundsWalk');
 
@@ -2063,6 +2125,10 @@ function updateJoystickVisual(dx, dy) {
  * Send joystick update to ESP32 (throttled)
  */
 function sendJoystickUpdate() {
+    if (state.joystick.currentX !== state.joystick.twinX || state.joystick.currentY !== state.joystick.twinY) {
+        state.joystick.twinX = state.joystick.currentX; state.joystick.twinY = state.joystick.currentY;
+        twinSend('joystick', { x: state.joystick.currentX, y: state.joystick.currentY });
+    }
     if (!state.connected) return;
 
     // Verificar si el valor cambió (evitar comandos duplicados)
@@ -2114,6 +2180,7 @@ function handleJoystick(event) {
     if (!state.joystick.dragging) {
         // Inicio del arrastre - guardar posición inicial
         const rect = elements.joystickKnob.parentElement.getBoundingClientRect();
+        state.joystick.maxDist = Math.round(rect.width / 1.8);   // recorrido proporcional al tamaño (100 px con 180 px)
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
 
@@ -2198,6 +2265,8 @@ function stopJoystick() {
     state.joystick.knobStartY = 0;
 
     // Send stop command immediately
+    state.joystick.twinX = 0; state.joystick.twinY = 0;
+    twinSend('joystick', { x: 0, y: 0 });
     if (state.connected) {
         const url = `http://${state.espIP}/joystick?x=0&y=0`;
         fetch(url, { mode: 'cors', cache: 'no-cache', keepalive: true }).catch(() => {});
@@ -2601,6 +2670,9 @@ function init() {
         // Start joystick update processing loop
         processJoystickUpdates();
 
+        // Ataques y sonidos del inicio: los que eligio el usuario, o 4 utiles la primera vez
+        restoreQuickSelections();
+
         // Initialize quick attacks UI
         updateQuickAttacks();
 
@@ -2618,6 +2690,8 @@ function init() {
         // Initialize volume controls
         updateVolumeIcon();
         updateVolumeDisplay();
+
+        initHomeLayout();
 
         // Initialize ultrasonic sensor panel
         initUltrasonicPanel();
