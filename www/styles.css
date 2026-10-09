@@ -5028,3 +5028,13 @@ body::before {
 #game-controls .home-quick [class$="-grid"] { align-content: center !important; flex: 1; }
 #game-controls .home-quick [class$="-grid"] > * { height: clamp(64px, 18vh, 140px) !important; }
 #game-controls .home-quick [class^="quick-"][class$="-container"] { display: flex !important; flex-direction: column; }
+
+/* Titulo con icono de mando en inicio: solo si la pantalla tiene altura de sobra */
+@media (min-height: 620px) {
+    #game-controls .card { display: flex !important; flex-direction: column; }
+    #game-controls .card-header { display: flex; flex: none; margin-bottom: 8px; padding-bottom: 6px; }
+    #game-controls .card-title { font-size: 18px !important; gap: 10px !important; }
+    #game-controls .card-title > span:first-child { width: 34px !important; height: 34px !important; border-radius: 10px !important; }
+    #game-controls .card-title img { width: 22px !important; height: 22px !important; }
+    #game-controls .home-grid { flex: 1; height: auto; }
+}

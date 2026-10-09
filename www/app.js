@@ -180,7 +180,7 @@ function setTwin(on) {
     const frame = document.getElementById('twinFrame');
     if (!frame) return;
     if (on) twinWatch.loadedAt = Date.now();
-    if (on && !frame.getAttribute('src')) frame.src = 'simulador/index.html?twin=1&v=202610091200';
+    if (on && !frame.getAttribute('src')) frame.src = 'simulador/index.html?twin=1&v=202610091230';
     if (!on) frame.removeAttribute('src');
     frame.hidden = !on;
     document.getElementById('twinOff').hidden = on;
