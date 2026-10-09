@@ -5010,3 +5010,21 @@ body::before {
 #game-controls .joystick-container, #game-controls .joystick-wrapper { margin: 0 !important; padding: 0 !important; }
 #game-controls .right-panel { gap: 8px !important; justify-content: space-evenly !important; }
 #game-controls .joystick-wrapper { width: clamp(130px, 40vh, 180px) !important; height: clamp(130px, 40vh, 180px) !important; }
+
+/* Inicio v2: columnas laterales de ancho contenido, robot al centro con el resto del espacio */
+#game-controls .home-grid { grid-template-columns: minmax(190px, 0.8fr) minmax(0, 1.8fr) minmax(190px, 0.8fr) !important; }
+#game-controls .right-panel {
+    width: 100% !important; max-width: none !important; justify-self: stretch;
+    justify-content: center !important; align-items: center !important; gap: 18px !important;
+}
+#game-controls .d-pad { --dp: clamp(44px, calc((100vh - 300px) / 3), 76px); }
+#game-controls .home-quick [class$="-grid"] { align-content: start; grid-auto-rows: auto !important; }
+#game-controls .home-quick [class$="-grid"] > * {
+    aspect-ratio: auto !important; width: 100% !important; height: clamp(64px, 15vh, 118px) !important; min-height: 0 !important;
+}
+@media (orientation: portrait) {
+    #game-controls .home-grid { grid-template-columns: 1fr 1fr !important; }
+}
+#game-controls .home-quick [class$="-grid"] { align-content: center !important; flex: 1; }
+#game-controls .home-quick [class$="-grid"] > * { height: clamp(64px, 18vh, 140px) !important; }
+#game-controls .home-quick [class^="quick-"][class$="-container"] { display: flex !important; flex-direction: column; }

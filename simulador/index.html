@@ -1024,7 +1024,7 @@ THREE.Object3D.DefaultUp.set(0, 0, 1);
 const camera = new THREE.PerspectiveCamera(38, 1, 1, 8000);
 camera.up.set(0, 0, 1);
 camera.position.set(300, 430, 340);   // detras del robot (mira hacia -Y): se ven el robot y lo que tiene delante
-if (TWIN) camera.position.set(230, 340, 250);   // en la app: vista de tres cuartos que muestra el robot entero
+if (TWIN) camera.position.set(250, -330, 230);   // en la app: de frente y de tres cuartos (se ve la cara)
 scene.add(new THREE.HemisphereLight(0xffffff, 0x303040, 0.85));
 const sun = new THREE.DirectionalLight(0xffffff, 0.75);
 sun.position.set(250, -300, 500);
