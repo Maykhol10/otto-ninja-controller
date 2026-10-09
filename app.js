@@ -13,8 +13,10 @@ const state = {
     currentOffsetRight: 0,
     currentRollLeft: 0,
     currentRollRight: 0,
-    currentWalkSpeed: 40,
+    currentWalkSpeed: 15,
     currentWalkTilt: 30,
+    currentWalkTilt2: 20,
+    currentWalkTime: 450,
     drawerOpen: false,
     selectedAttacks: new Set(),
     maxSelectedAttacks: 4,
@@ -116,6 +118,10 @@ const elements = {
     walkTilt: document.getElementById('walkTilt'),
     walkSpeedValue: document.getElementById('walkSpeedValue'),
     walkTiltValue: document.getElementById('walkTiltValue'),
+    walkTilt2: document.getElementById('walkTilt2'),
+    walkTime: document.getElementById('walkTime'),
+    walkTilt2Value: document.getElementById('walkTilt2Value'),
+    walkTimeValue: document.getElementById('walkTimeValue'),
     attacksCounter: document.getElementById('attacksCounter'),
     attackCheckboxes: document.querySelectorAll('.attack-checkbox-input'),
     attackCards: document.querySelectorAll('.attack-card'),
@@ -276,9 +282,9 @@ function showPanel(panelId) {
         return;
     }
 
-    // Stop live ultrasonic polling when leaving the ultrasonic panel
+    // Stop the sensor test when leaving the ultrasonic panel
     if (state.currentMode === 'ultrasonic' && panelId !== 'ultrasonic') {
-        stopUltrasonicLive();
+        stopUltrasonicTest();
     }
 
     elements.panels.forEach(panel => {
@@ -296,11 +302,6 @@ function showPanel(panelId) {
 
     if (elements.debugLog) {
         addLog(`🎮 Panel: ${panelId.toUpperCase()}`);
-    }
-
-    // Start live ultrasonic polling when entering the ultrasonic panel
-    if (panelId === 'ultrasonic') {
-        startUltrasonicLive();
     }
 
     // Close drawer after selecting a panel
@@ -1775,416 +1776,86 @@ function volumeDown() {
 }
 
 // ========== ULTRASONIC SENSOR ==========
+// Solo dos funciones: Test (muestra los cm) y Automático (camina y esquiva obstáculos).
 
 const usState = {
-    enabled: false,
-    dangerThreshold: 15,
-    alertThreshold: 40,
-    reaction: 'stop',
-    buzzerAlert: false,
-    // Test state
-    testRunning: false,
     testInterval: null,
-    testReadings: [],
-    testMaxReadings: 30,
-    displayAlert: false,
-    lastDistance: null,
-    // Live polling
-    liveInterval: null
+    autoOn: false
 };
 
 /**
- * Fetch one distance reading and update the UI
+ * Read one distance from the ESP32 and show it
  */
-async function fetchUltrasonicLive() {
+async function fetchUltrasonicReading() {
     if (!state.connected || !state.espIP) {
         updateUltrasonicDisplay(null, 'Sin conexión');
         return;
     }
     try {
-        const url = `http://${state.espIP}/ultrasonic?action=read`;
-        const resp = await fetch(url, { signal: AbortSignal.timeout(2000) });
-        if (resp.ok) {
-            const data = await resp.json();
-            const dist = parseInt(data.distance);
-            // Ignorar lecturas inválidas (-1 = sin eco, 0 = error)
-            if (dist > 0) {
-                usState.lastDistance = dist;
-                updateUltrasonicDisplay(dist);
-            }
-            // Si es inválida, mantener la última lectura válida en pantalla
-        } else {
-            updateUltrasonicDisplay(null, 'Error al leer');
-        }
+        const resp = await fetch(`http://${state.espIP}/ultrasonic?action=read`, { signal: AbortSignal.timeout(2000) });
+        if (!resp.ok) { updateUltrasonicDisplay(null, 'Error al leer'); return; }
+        const data = await resp.json();
+        const dist = parseInt(data.distance);
+        if (dist > 0) updateUltrasonicDisplay(dist);
+        else updateUltrasonicDisplay(null, 'Nada al frente (sin eco)');
     } catch (e) {
         updateUltrasonicDisplay(null, 'Sin respuesta');
     }
 }
 
-/**
- * Start automatic live distance polling (every 500 ms)
- */
-function startUltrasonicLive() {
-    if (usState.liveInterval) return;
-    const dot   = document.getElementById('usLiveDot');
-    const label = document.getElementById('usLiveLabel');
-    if (dot)   dot.className   = 'us-live-dot active';
-    if (label) label.textContent = 'En vivo';
-    fetchUltrasonicLive(); // immediate first read
-    usState.liveInterval = setInterval(fetchUltrasonicLive, 500);
-}
-
-/**
- * Stop live distance polling
- */
-function stopUltrasonicLive() {
-    if (usState.liveInterval) {
-        clearInterval(usState.liveInterval);
-        usState.liveInterval = null;
-    }
-    const dot   = document.getElementById('usLiveDot');
-    const label = document.getElementById('usLiveLabel');
-    if (dot)   dot.className   = 'us-live-dot';
-    if (label) label.textContent = 'Pausado';
-}
-
-/**
- * Update the live reading UI
- */
-function updateUltrasonicDisplay(dist, errorMsg) {
-    const valEl      = document.getElementById('usDistanceValue');
-    const badge      = document.getElementById('usStatusBadge');
-    const fill       = document.getElementById('usBarFill');
-    const sensorWrap = document.getElementById('usSensorImgWrap');
-
-    const danger = usState.dangerThreshold;
-    const alert  = usState.alertThreshold;
-    const maxCm  = 150;
-
-    if (dist === null || dist === undefined || errorMsg) {
+function updateUltrasonicDisplay(dist, msg) {
+    const valEl = document.getElementById('usDistanceValue');
+    const badge = document.getElementById('usStatusBadge');
+    const wrap  = document.getElementById('usSensorImgWrap');
+    if (dist === null || dist === undefined) {
         if (valEl) { valEl.textContent = '--'; valEl.style.color = 'rgba(255,255,255,0.35)'; }
-        if (badge) { badge.textContent = errorMsg || 'Sin lectura'; badge.className = 'us-status-badge'; }
-        if (fill)  fill.style.width = '0%';
-        if (sensorWrap) sensorWrap.className = 'us-sensor-img-wrap';
+        if (badge) { badge.textContent = msg || 'Sin lectura'; badge.className = 'us-status-badge'; }
+        if (wrap)  wrap.className = 'us-sensor-img-wrap';
         return;
     }
-
-    if (valEl) valEl.textContent = dist;
-
-    const pct = Math.min(100, (dist / maxCm) * 100);
-    if (fill) fill.style.width = pct + '%';
-
-    let status, color, stateClass;
-    if (dist <= danger) {
-        status = 'Peligro — obstáculo cercano'; color = '#ff3b30'; stateClass = 'danger';
-    } else if (dist <= alert) {
-        status = 'Alerta — objeto detectado'; color = '#ff9f0a'; stateClass = 'alert';
-    } else {
-        status = 'Libre — sin obstáculos'; color = '#34c759'; stateClass = 'normal';
+    const near = dist <= 20;   // misma distancia que usa el modo automático
+    if (valEl) { valEl.textContent = dist; valEl.style.color = near ? '#ff3b30' : '#34c759'; }
+    if (badge) {
+        badge.textContent = near ? `Obstáculo a ${dist} cm` : `Detectado a ${dist} cm`;
+        badge.className = 'us-status-badge ' + (near ? 'danger' : 'normal');
     }
-
-    if (valEl) valEl.style.color = color;
-    if (fill)  fill.style.background = color;
-    if (badge) { badge.textContent = status; badge.className = 'us-status-badge ' + stateClass; }
-    if (sensorWrap) sensorWrap.className = 'us-sensor-img-wrap ' + stateClass;
+    if (wrap) wrap.className = 'us-sensor-img-wrap ' + (near ? 'danger' : 'normal');
 }
 
-/**
- * Update the zone markers on the distance bar
- */
-function updateUltrasonicMarkers() {
-    const maxCm = 150;
-    const dangerMarker = document.getElementById('usBarDanger');
-    const alertMarker  = document.getElementById('usBarAlert');
-    if (dangerMarker) dangerMarker.style.left = Math.min(99, (usState.dangerThreshold / maxCm) * 100) + '%';
-    if (alertMarker)  alertMarker.style.left  = Math.min(99, (usState.alertThreshold  / maxCm) * 100) + '%';
-}
-
-/**
- * Send configuration to the ESP32
- */
-async function applyUltrasonicConfig() {
-    const btn = document.getElementById('usApplyBtn');
-    if (btn) { btn.classList.add('loading'); btn.textContent = 'Aplicando...'; }
-
-    await sendRequest('ultrasonic', {
-        action:   'config',
-        enabled:  usState.enabled ? 1 : 0,
-        danger:   usState.dangerThreshold,
-        alert:    usState.alertThreshold,
-        reaction: usState.reaction,
-        buzzer:   usState.buzzerAlert ? 1 : 0,
-        display:  usState.displayAlert ? 1 : 0
-    });
-
-    if (btn) { btn.classList.remove('loading'); btn.textContent = 'Aplicar configuración'; }
-}
-
-/**
- * Start continuous sensor test
- */
 function startUltrasonicTest() {
-    if (usState.testRunning) return;
-    usState.testRunning = true;
-    usState.testReadings = [];
-
-    const dot      = document.getElementById('usTestDot');
-    const txt      = document.getElementById('usTestStatusText');
-    const startBtn = document.getElementById('usTestStartBtn');
-    const stopBtn  = document.getElementById('usTestStopBtn');
-
-    if (dot)      { dot.className = 'us-test-dot running'; }
-    if (txt)      txt.textContent = 'Ejecutando...';
-    if (startBtn) startBtn.disabled = true;
-    if (stopBtn)  stopBtn.disabled = false;
-
-    // Run immediately, then every 600ms
-    runTestReading();
-    usState.testInterval = setInterval(runTestReading, 600);
+    if (usState.testInterval) return;
+    fetchUltrasonicReading();
+    usState.testInterval = setInterval(fetchUltrasonicReading, 300);
+    document.getElementById('usTestStartBtn').disabled = true;
+    document.getElementById('usTestStopBtn').disabled = false;
 }
 
-async function runTestReading() {
-    if (!state.connected || !state.espIP) {
-        stopUltrasonicTest('error', 'Sin conexión al robot');
-        return;
+function stopUltrasonicTest() {
+    if (usState.testInterval) {
+        clearInterval(usState.testInterval);
+        usState.testInterval = null;
     }
-    try {
-        const url = `http://${state.espIP}/ultrasonic?action=read`;
-        const resp = await fetch(url, { signal: AbortSignal.timeout(2000) });
-        if (!resp.ok) { stopUltrasonicTest('error', 'Error de respuesta'); return; }
-        const data = await resp.json();
-        const dist = parseInt(data.distance);
-        if (isNaN(dist) || dist <= 0) { return; } // Ignorar lecturas inválidas, esperar la siguiente
-
-        usState.testReadings.push(dist);
-        if (usState.testReadings.length > usState.testMaxReadings) {
-            usState.testReadings.shift();
-        }
-
-        updateUltrasonicDisplay(dist);
-        updateTestChart();
-        updateTestStats();
-
-        // Update status text
-        const txt = document.getElementById('usTestStatusText');
-        const stateClass = dist <= usState.dangerThreshold ? 'Peligro' :
-                           dist <= usState.alertThreshold  ? 'Alerta' : 'Libre';
-        if (txt) txt.textContent = `Sensor OK — ${stateClass}`;
-
-    } catch (e) {
-        stopUltrasonicTest('error', 'Sin respuesta del sensor');
-    }
-}
-
-/**
- * Stop sensor test
- */
-function stopUltrasonicTest(status = 'ok', msg = null) {
-    usState.testRunning = false;
-    clearInterval(usState.testInterval);
-    usState.testInterval = null;
-
-    const dot      = document.getElementById('usTestDot');
-    const txt      = document.getElementById('usTestStatusText');
     const startBtn = document.getElementById('usTestStartBtn');
     const stopBtn  = document.getElementById('usTestStopBtn');
-
-    if (dot) dot.className = 'us-test-dot ' + status;
-    if (txt) txt.textContent = msg || (status === 'ok' ? 'Detenido' : 'Error — sensor no responde');
     if (startBtn) startBtn.disabled = false;
     if (stopBtn)  stopBtn.disabled = true;
 }
 
-/**
- * Render the bar chart with the last N readings
- */
-function updateTestChart() {
-    const container = document.getElementById('usChartBars');
-    const maxLabel  = document.getElementById('usChartMax');
-    const minLabel  = document.getElementById('usChartMin');
-    if (!container || usState.testReadings.length === 0) return;
-
-    const readings = usState.testReadings;
-    const max = Math.max(...readings);
-    const min = Math.min(...readings);
-
-    if (maxLabel) maxLabel.textContent = max;
-    if (minLabel) minLabel.textContent = min;
-
-    container.innerHTML = '';
-    readings.forEach(val => {
-        const bar = document.createElement('div');
-        bar.className = 'us-chart-bar';
-        const pct = max > 0 ? Math.max(4, Math.round((val / max) * 100)) : 4;
-        bar.style.height = pct + '%';
-        const color = val <= usState.dangerThreshold ? '#ff3b30'
-                    : val <= usState.alertThreshold  ? '#ff9f0a'
-                    : '#34c759';
-        bar.style.background = color;
-        bar.title = val + ' cm';
-        container.appendChild(bar);
-    });
+async function setUltrasonicAuto(on) {
+    const ok = await sendRequest('ultrasonic', { action: 'auto', on: on ? 1 : 0 });
+    if (!ok) return;
+    usState.autoOn = on;
+    document.getElementById('usAutoStartBtn').disabled = on;
+    document.getElementById('usAutoStopBtn').disabled = !on;
+    document.getElementById('usAutoDot').className = 'us-test-dot' + (on ? ' running' : '');
+    document.getElementById('usAutoStatus').textContent = on ? 'Caminando solo…' : 'Detenido';
 }
 
-/**
- * Update test statistics
- */
-function updateTestStats() {
-    const r = usState.testReadings;
-    if (r.length === 0) return;
-
-    const avg = Math.round(r.reduce((a, b) => a + b, 0) / r.length);
-    const min = Math.min(...r);
-    const max = Math.max(...r);
-
-    const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    setEl('usStatAvg',   avg);
-    setEl('usStatMin',   min);
-    setEl('usStatMax',   max);
-    setEl('usStatCount', r.length);
-}
-
-/**
- * Verify sensor reading against a known distance
- */
-async function verifyCalibration() {
-    const input     = document.getElementById('usCalInput');
-    const resultEl  = document.getElementById('usCalResult');
-    const btn       = document.getElementById('usCalBtn');
-    if (!input || !resultEl) return;
-
-    const expected = parseInt(input.value);
-    if (!expected || expected < 5) return;
-
-    btn.disabled = true;
-    resultEl.className = 'us-cal-result';
-    resultEl.textContent = 'Midiendo...';
-
-    if (!state.connected || !state.espIP) {
-        resultEl.textContent = 'Sin conexión al robot.';
-        resultEl.className = 'us-cal-result error';
-        btn.disabled = false;
-        return;
-    }
-
-    try {
-        const url = `http://${state.espIP}/ultrasonic?action=read`;
-        const resp = await fetch(url, { signal: AbortSignal.timeout(3000) });
-        const data = await resp.json();
-        const measured = parseInt(data.distance);
-        if (isNaN(measured) || measured <= 0) {
-            resultEl.textContent = '⚠ Lectura inválida, intenta de nuevo.';
-            resultEl.className = 'us-cal-result warn';
-            btn.disabled = false;
-            return;
-        }
-        const diff = Math.abs(measured - expected);
-        const pct = Math.round((diff / expected) * 100);
-
-        updateUltrasonicDisplay(measured);
-
-        if (diff <= 2) {
-            resultEl.textContent = `✓ Perfecto — sensor mide ${measured} cm (error ±${diff} cm)`;
-            resultEl.className = 'us-cal-result ok';
-        } else if (pct <= 10) {
-            resultEl.textContent = `⚠ Aceptable — mide ${measured} cm, esperado ${expected} cm (error ${pct}%)`;
-            resultEl.className = 'us-cal-result warn';
-        } else {
-            resultEl.textContent = `✗ Descalibrado — mide ${measured} cm, esperado ${expected} cm (error ${pct}%)`;
-            resultEl.className = 'us-cal-result error';
-        }
-    } catch (e) {
-        resultEl.textContent = '✗ Sensor no responde.';
-        resultEl.className = 'us-cal-result error';
-    }
-    btn.disabled = false;
-}
-
-/**
- * Initialize ultrasonic panel event listeners
- */
 function initUltrasonicPanel() {
-    // Enable toggle
-    const enabledChk = document.getElementById('usEnabled');
-    const enabledLabel = document.getElementById('usEnabledLabel');
-    if (enabledChk) {
-        enabledChk.addEventListener('change', function() {
-            usState.enabled = this.checked;
-            if (enabledLabel) enabledLabel.textContent = this.checked ? 'Activo' : 'Inactivo';
-        });
-    }
-
-    // Danger slider
-    const dangerSlider = document.getElementById('usDangerSlider');
-    const dangerValue  = document.getElementById('usDangerValue');
-    if (dangerSlider) {
-        dangerSlider.addEventListener('input', function() {
-            usState.dangerThreshold = parseInt(this.value);
-            // Prevent danger from exceeding alert
-            if (usState.dangerThreshold >= usState.alertThreshold) {
-                usState.alertThreshold = usState.dangerThreshold + 5;
-                const alertSlider = document.getElementById('usAlertSlider');
-                const alertValue  = document.getElementById('usAlertValue');
-                if (alertSlider) alertSlider.value = usState.alertThreshold;
-                if (alertValue)  alertValue.textContent = usState.alertThreshold + ' cm';
-            }
-            if (dangerValue) dangerValue.textContent = this.value + ' cm';
-            updateUltrasonicMarkers();
-            updateUltrasonicDisplay(usState.lastDistance);
-        });
-    }
-
-    // Alert slider
-    const alertSlider = document.getElementById('usAlertSlider');
-    const alertValue  = document.getElementById('usAlertValue');
-    if (alertSlider) {
-        alertSlider.addEventListener('input', function() {
-            usState.alertThreshold = parseInt(this.value);
-            // Prevent alert from going below danger
-            if (usState.alertThreshold <= usState.dangerThreshold) {
-                usState.dangerThreshold = usState.alertThreshold - 5;
-                const dSlider = document.getElementById('usDangerSlider');
-                const dValue  = document.getElementById('usDangerValue');
-                if (dSlider) dSlider.value = usState.dangerThreshold;
-                if (dValue)  dValue.textContent = usState.dangerThreshold + ' cm';
-            }
-            if (alertValue) alertValue.textContent = this.value + ' cm';
-            updateUltrasonicMarkers();
-            updateUltrasonicDisplay(usState.lastDistance);
-        });
-    }
-
-    // Reaction buttons
-    document.querySelectorAll('.us-reaction-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.us-reaction-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            usState.reaction = this.dataset.reaction;
-        });
-    });
-
-    // Checkboxes
-    const buzzerChk  = document.getElementById('usBuzzerAlert');
-    const displayChk = document.getElementById('usDisplayAlert');
-    if (buzzerChk)  buzzerChk.addEventListener('change',  () => { usState.buzzerAlert  = buzzerChk.checked; });
-    if (displayChk) displayChk.addEventListener('change', () => { usState.displayAlert = displayChk.checked; });
-
-    // Apply button
-    const applyBtn = document.getElementById('usApplyBtn');
-    if (applyBtn) applyBtn.addEventListener('click', applyUltrasonicConfig);
-
-    // Test buttons
-    const testStartBtn = document.getElementById('usTestStartBtn');
-    if (testStartBtn) testStartBtn.addEventListener('click', startUltrasonicTest);
-
-    const testStopBtn = document.getElementById('usTestStopBtn');
-    if (testStopBtn) testStopBtn.addEventListener('click', () => stopUltrasonicTest());
-
-    const calBtn = document.getElementById('usCalBtn');
-    if (calBtn) calBtn.addEventListener('click', verifyCalibration);
-
-    // Init markers
-    updateUltrasonicMarkers();
+    document.getElementById('usTestStartBtn')?.addEventListener('click', startUltrasonicTest);
+    document.getElementById('usTestStopBtn')?.addEventListener('click', stopUltrasonicTest);
+    document.getElementById('usAutoStartBtn')?.addEventListener('click', () => setUltrasonicAuto(true));
+    document.getElementById('usAutoStopBtn')?.addEventListener('click', () => setUltrasonicAuto(false));
 }
 
 // ========== CALIBRATION ==========
@@ -2277,7 +1948,7 @@ function resetRollOffsets() {
  */
 function updateWalkDisplay(key, value) {
     const valueElement = elements[`walk${key}Value`];
-    if (valueElement) valueElement.innerText = key === 'Tilt' ? `${value}°` : `${value}`;
+    if (valueElement) valueElement.innerText = key.startsWith('Tilt') ? `${value}°` : key === 'Time' ? `${value} ms` : `${value}`;
     state[`currentWalk${key}`] = parseInt(value);
 }
 
@@ -2285,10 +1956,12 @@ function updateWalkDisplay(key, value) {
  * Apply walk calibration (foot speed and leg tilt)
  */
 async function applyWalkConfig() {
-    addLog(`⚙️ CAMINATA: velocidad=${state.currentWalkSpeed} inclinación=${state.currentWalkTilt}°`);
+    addLog(`⚙️ CAMINATA: velocidad=${state.currentWalkSpeed} inclinación=${state.currentWalkTilt}°/${state.currentWalkTilt2}° giro=${state.currentWalkTime} ms`);
     const success = await sendRequest('walkcfg', {
         speed: state.currentWalkSpeed,
-        tilt: state.currentWalkTilt
+        tilt: state.currentWalkTilt,
+        tilt2: state.currentWalkTilt2,
+        time: state.currentWalkTime
     });
     if (!success) {
         addLog(`⚠️ No se pudo aplicar la calibración de caminata. Verifica la conexión.`);
@@ -2299,10 +1972,14 @@ async function applyWalkConfig() {
  * Reset walk calibration to defaults
  */
 function resetWalkConfig() {
-    elements.walkSpeed.value = 40;
+    elements.walkSpeed.value = 15;
     elements.walkTilt.value = 30;
-    updateWalkDisplay('Speed', 40);
+    elements.walkTilt2.value = 20;
+    elements.walkTime.value = 450;
+    updateWalkDisplay('Speed', 15);
     updateWalkDisplay('Tilt', 30);
+    updateWalkDisplay('Tilt2', 20);
+    updateWalkDisplay('Time', 450);
     applyWalkConfig();
 }
 
@@ -2722,6 +2399,12 @@ function setupEventListeners() {
     }
     if (elements.walkTilt) {
         elements.walkTilt.addEventListener('input', (e) => updateWalkDisplay('Tilt', e.target.value));
+    }
+    if (elements.walkTilt2) {
+        elements.walkTilt2.addEventListener('input', (e) => updateWalkDisplay('Tilt2', e.target.value));
+    }
+    if (elements.walkTime) {
+        elements.walkTime.addEventListener('input', (e) => updateWalkDisplay('Time', e.target.value));
     }
 
     // Offset sliders

@@ -4863,3 +4863,63 @@ body::before {
 .saved-bitmap-select-btn:hover { color: var(--warning, #FF9500); border-color: var(--warning, #FF9500); }
 .saved-bitmap-select-btn.active { color: var(--warning, #FF9500); background: rgba(255, 149, 0, 0.15); border-color: var(--warning, #FF9500); }
 .saved-bitmap-delete-btn:hover { color: var(--danger, #FF3B30); border-color: var(--danger, #FF3B30); }
+
+/* Panel sensor: texto del modo automatico */
+.us-auto-desc {
+    margin: 0;
+    text-align: center;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Panel sensor: Test y Automatico lado a lado, todo visible sin scroll */
+#ultrasonic.active {
+    display: flex;
+    gap: 12px;
+    overflow: hidden !important;
+}
+#ultrasonic .card {
+    flex: 1 1 0 !important;
+    min-width: 0;
+    width: auto !important;
+    height: 100%;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    overflow: hidden !important;
+}
+#ultrasonic .card-header {
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+}
+#ultrasonic .us-live-section {
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    padding: 8px;
+    gap: 8px;
+    justify-content: center;
+}
+#ultrasonic .us-row {
+    flex-direction: row;
+    gap: 14px;
+}
+#ultrasonic .us-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+#ultrasonic .us-sensor-img {
+    width: auto;
+    max-width: 100%;
+    height: clamp(40px, 22vh, 120px);
+}
+#ultrasonic .us-distance-value {
+    font-size: clamp(30px, 12vh, 64px);
+}
+@media (orientation: portrait) {
+    #ultrasonic.active { flex-direction: column; }
+}

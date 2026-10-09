@@ -986,170 +986,57 @@
 
             <!-- Ultrasonic Sensor Panel -->
             <div class="content-panel" id="ultrasonic">
+                <!-- Test del sensor -->
                 <div class="card">
-                    <div class="card-header us-card-header">
-                        <h2 class="card-title">Sensor Ultrasonido</h2>
-                        <label class="us-master-toggle" title="Activar detección de obstáculos">
-                            <input type="checkbox" id="usEnabled">
-                            <span class="us-toggle-track">
-                                <span class="us-toggle-thumb"></span>
-                            </span>
-                            <span class="us-toggle-label" id="usEnabledLabel">Inactivo</span>
-                        </label>
+                    <div class="card-header">
+                        <h2 class="card-title">Test sensor</h2>
                     </div>
-
-                    <!-- Lectura en vivo -->
-                    <div class="us-live-section">
+                    <div class="us-live-section us-row">
                         <div class="us-sensor-img-wrap" id="usSensorImgWrap">
-                            <img src="sensor2.png" alt="Sensor Ultrasonido" class="us-sensor-img" id="usSensorImg">
+                            <img src="sensor2.png" alt="Sensor Ultrasonido" class="us-sensor-img">
                         </div>
+                        <div class="us-col">
                         <div class="us-reading-display">
                             <span class="us-distance-value" id="usDistanceValue">--</span>
                             <span class="us-distance-unit">cm</span>
                         </div>
-                        <div class="us-distance-bar-wrap">
-                            <div class="us-distance-bar" id="usDistanceBar">
-                                <div class="us-bar-fill" id="usBarFill"></div>
-                                <div class="us-bar-marker alert" id="usBarAlert"></div>
-                                <div class="us-bar-marker danger" id="usBarDanger"></div>
-                            </div>
-                            <div class="us-bar-labels">
-                                <span>0</span>
-                                <span>50</span>
-                                <span>100</span>
-                                <span>150 cm</span>
-                            </div>
-                        </div>
-                        <div class="us-status-badge" id="usStatusBadge">Sin lectura</div>
-                        <div class="us-live-indicator" id="usLiveIndicator">
-                            <span class="us-live-dot" id="usLiveDot"></span>
-                            <span class="us-live-label" id="usLiveLabel">Conectando...</span>
-                        </div>
-                    </div>
-
-                    <!-- Zonas de detección -->
-                    <div class="us-config-section">
-                        <h3 class="us-section-title">Zonas de detección</h3>
-                        <div class="us-zone-row">
-                            <div class="us-zone-dot" style="background:#ff3b30"></div>
-                            <span class="us-zone-name">Peligro</span>
-                            <input type="range" class="us-slider" id="usDangerSlider" min="5" max="50" value="15">
-                            <span class="us-zone-value" id="usDangerValue">15 cm</span>
-                        </div>
-                        <div class="us-zone-row">
-                            <div class="us-zone-dot" style="background:#ff9f0a"></div>
-                            <span class="us-zone-name">Alerta</span>
-                            <input type="range" class="us-slider" id="usAlertSlider" min="20" max="120" value="40">
-                            <span class="us-zone-value" id="usAlertValue">40 cm</span>
-                        </div>
-                    </div>
-
-                    <!-- Reacción -->
-                    <div class="us-config-section">
-                        <h3 class="us-section-title">Reacción al detectar obstáculo</h3>
-                        <div class="us-reaction-grid">
-                            <button class="us-reaction-btn active" data-reaction="stop">
-                                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+                        <div class="us-status-badge" id="usStatusBadge">Pulsa Iniciar</div>
+                        <div class="us-test-controls">
+                            <button class="us-test-start-btn" id="usTestStartBtn">
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M8 5v14l11-7z"/></svg>
+                                Iniciar
+                            </button>
+                            <button class="us-test-stop-btn" id="usTestStopBtn" disabled>
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
                                 Detener
                             </button>
-                            <button class="us-reaction-btn" data-reaction="back">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-                                Retroceder
+                        </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modo automatico -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Automático</h2>
+                    </div>
+                    <div class="us-live-section">
+                        <p class="us-auto-desc">El robot camina solo. Si ve un obstáculo a menos de 20 cm, retrocede, gira a la derecha y sigue caminando.</p>
+                        <div class="us-test-status">
+                            <span class="us-test-dot" id="usAutoDot"></span>
+                            <span id="usAutoStatus">Detenido</span>
+                        </div>
+                        <div class="us-test-controls">
+                            <button class="us-test-start-btn" id="usAutoStartBtn">
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M8 5v14l11-7z"/></svg>
+                                Iniciar
                             </button>
-                            <button class="us-reaction-btn" data-reaction="left">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M9 18l-6-6 6-6M3 12h18"/></svg>
-                                Girar izq.
-                            </button>
-                            <button class="us-reaction-btn" data-reaction="right">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M15 18l6-6-6-6M21 12H3"/></svg>
-                                Girar der.
+                            <button class="us-test-stop-btn" id="usAutoStopBtn" disabled>
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+                                Detener
                             </button>
                         </div>
                     </div>
-
-                    <!-- Alertas adicionales -->
-                    <div class="us-config-section">
-                        <h3 class="us-section-title">Alertas</h3>
-                        <label class="us-check-row">
-                            <input type="checkbox" id="usBuzzerAlert">
-                            <span class="us-check-box"></span>
-                            <span>Emitir sonido al detectar obstáculo</span>
-                        </label>
-                        <label class="us-check-row">
-                            <input type="checkbox" id="usDisplayAlert">
-                            <span class="us-check-box"></span>
-                            <span>Mostrar distancia en display</span>
-                        </label>
-                    </div>
-
-                    <!-- Test del sensor -->
-                    <div class="us-config-section">
-                        <h3 class="us-section-title">Test del sensor</h3>
-
-                        <!-- Estado y controles -->
-                        <div class="us-test-header">
-                            <div class="us-test-status" id="usTestStatus">
-                                <span class="us-test-dot" id="usTestDot"></span>
-                                <span id="usTestStatusText">Sin iniciar</span>
-                            </div>
-                            <div class="us-test-controls">
-                                <button class="us-test-start-btn" id="usTestStartBtn">
-                                    <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M8 5v14l11-7z"/></svg>
-                                    Iniciar
-                                </button>
-                                <button class="us-test-stop-btn" id="usTestStopBtn" disabled>
-                                    <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
-                                    Detener
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Historial visual -->
-                        <div class="us-test-chart" id="usTestChart">
-                            <div class="us-chart-bars" id="usChartBars"></div>
-                            <div class="us-chart-labels">
-                                <span id="usChartMax">--</span>
-                                <span>cm</span>
-                                <span id="usChartMin">--</span>
-                            </div>
-                        </div>
-
-                        <!-- Estadísticas -->
-                        <div class="us-test-stats" id="usTestStats">
-                            <div class="us-stat-box">
-                                <span class="us-stat-label">Promedio</span>
-                                <span class="us-stat-value" id="usStatAvg">--</span>
-                                <span class="us-stat-unit">cm</span>
-                            </div>
-                            <div class="us-stat-box">
-                                <span class="us-stat-label">Mínimo</span>
-                                <span class="us-stat-value" id="usStatMin">--</span>
-                                <span class="us-stat-unit">cm</span>
-                            </div>
-                            <div class="us-stat-box">
-                                <span class="us-stat-label">Máximo</span>
-                                <span class="us-stat-value" id="usStatMax">--</span>
-                                <span class="us-stat-unit">cm</span>
-                            </div>
-                            <div class="us-stat-box">
-                                <span class="us-stat-label">Lecturas</span>
-                                <span class="us-stat-value" id="usStatCount">0</span>
-                                <span class="us-stat-unit">total</span>
-                            </div>
-                        </div>
-
-                        <!-- Calibración por distancia conocida -->
-                        <div class="us-calibrate-row">
-                            <span class="us-cal-label">Coloca un objeto a</span>
-                            <input type="number" class="us-cal-input" id="usCalInput" value="30" min="5" max="200">
-                            <span class="us-cal-label">cm y verifica:</span>
-                            <button class="us-cal-btn" id="usCalBtn">Verificar</button>
-                        </div>
-                        <div class="us-cal-result" id="usCalResult"></div>
-                    </div>
-
-                    <!-- Botón aplicar -->
-                    <button class="us-apply-btn" id="usApplyBtn">Aplicar configuración</button>
                 </div>
             </div>
 
@@ -1205,16 +1092,30 @@
                         <div class="slider-container">
                             <div class="slider-header">
                                 <span class="slider-label">Velocidad de pies (menor = m&aacute;s lento)</span>
-                                <span class="slider-value" id="walkSpeedValue">40</span>
+                                <span class="slider-value" id="walkSpeedValue">15</span>
                             </div>
-                            <input type="range" class="custom-slider" id="walkSpeed" min="5" max="90" value="40">
+                            <input type="range" class="custom-slider" id="walkSpeed" min="5" max="90" value="15">
                         </div>
                         <div class="slider-container">
                             <div class="slider-header">
-                                <span class="slider-label">Inclinaci&oacute;n de pierna</span>
+                                <span class="slider-label">Inclinaci&oacute;n pierna que se levanta</span>
                                 <span class="slider-value" id="walkTiltValue">30°</span>
                             </div>
-                            <input type="range" class="custom-slider" id="walkTilt" min="5" max="45" value="30">
+                            <input type="range" class="custom-slider" id="walkTilt" min="5" max="60" value="30">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-header">
+                                <span class="slider-label">Inclinaci&oacute;n pierna de apoyo (menor)</span>
+                                <span class="slider-value" id="walkTilt2Value">20°</span>
+                            </div>
+                            <input type="range" class="custom-slider" id="walkTilt2" min="0" max="60" value="20">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-header">
+                                <span class="slider-label">Tiempo de giro del pie</span>
+                                <span class="slider-value" id="walkTimeValue">450 ms</span>
+                            </div>
+                            <input type="range" class="custom-slider" id="walkTime" min="100" max="1500" step="10" value="450">
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
                             <button class="arm-btn" data-action="calibrate" data-cmd="apply-walk">Aplicar Caminata</button>
