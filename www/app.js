@@ -179,14 +179,53 @@ function setTwin(on) {
     try { localStorage.setItem('otto-twin', on ? 'on' : 'off'); } catch (e) {}
     const frame = document.getElementById('twinFrame');
     if (!frame) return;
-    if (on && !frame.getAttribute('src')) frame.src = 'simulador/index.html?twin=1&v=202610090451';
+    if (on) twinWatch.loadedAt = Date.now();
+    if (on && !frame.getAttribute('src')) frame.src = 'simulador/index.html?twin=1&v=202610090504';
     if (!on) frame.removeAttribute('src');
     frame.hidden = !on;
     document.getElementById('twinOff').hidden = on;
     document.getElementById('twinReset').hidden = !on;
 }
 
+// Vigilante del gemelo: el simulador avisa cada segundo cuantos cuadros lleva.
+// Si se queda quieto 5 s mientras se ve (o no responde), se reinicia solo.
+const twinWatch = { frame: -1, changedAt: 0, lastMsg: 0, loadedAt: 0, restarts: 0 };
+function twinStatus(text, color) {
+    const dot = document.getElementById('twinDot');
+    if (dot) { dot.style.background = color; dot.style.boxShadow = '0 0 6px ' + color; }
+    const badge = dot && dot.parentElement;
+    if (badge) badge.lastChild.textContent = text;
+}
+function restartTwin(reason) {
+    const frame = document.getElementById('twinFrame');
+    if (!frame || !twinOn) return;
+    twinWatch.restarts++;
+    addLog(`🔄 Gemelo digital reiniciado (${reason})`);
+    twinStatus('Reiniciando…', '#ff9f0a');
+    twinWatch.frame = -1; twinWatch.loadedAt = Date.now(); twinWatch.lastMsg = 0;
+    frame.src = 'simulador/index.html?twin=1&r=' + Date.now();
+}
+window.addEventListener('message', e => {
+    const d = e.data || {};
+    if (d.ottoTwinError) twinStatus('Gemelo: ' + d.ottoTwinError, '#ff3b30');
+    if (typeof d.ottoTwinAlive !== 'number') return;
+    const now = Date.now();
+    twinWatch.lastMsg = now;
+    if (d.ottoTwinAlive !== twinWatch.frame) { twinWatch.frame = d.ottoTwinAlive; twinWatch.changedAt = now; }
+    if (d.ready) twinStatus('Gemelo digital', '#34c759');
+    else twinStatus('Gemelo: cargando física…', '#ff9f0a');
+});
+setInterval(() => {
+    const twin = document.getElementById('homeTwin');
+    if (!twinOn || !twin || twin.offsetParent === null || document.visibilityState !== 'visible') return;   // oculto: el navegador lo pausa
+    const now = Date.now();
+    if (now - twinWatch.loadedAt < 20000) return;                       // dejarlo cargar
+    if (now - twinWatch.lastMsg > 6000) restartTwin('no responde');
+    else if (now - twinWatch.changedAt > 5000) restartTwin('imagen congelada');
+}, 2000);
+
 function initHomeLayout() {
+    twinWatch.loadedAt = Date.now();
     setTwin(twinOn);
     document.getElementById('twinToggle')?.addEventListener('click', () => setTwin(!twinOn));
     document.getElementById('twinReset')?.addEventListener('click', () => {

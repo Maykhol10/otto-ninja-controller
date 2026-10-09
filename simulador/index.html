@@ -40,7 +40,10 @@
   [hidden] { display:none !important; }
   /* modo gemelo digital (dentro de la app): solo la vista 3D */
   .twin aside, .twin .hud, .twin #chToggle, .twin #choreo { display:none !important; }
-  .twin #app { grid-template-columns:1fr !important; }
+  .twin #app { grid-template-columns:minmax(0,1fr) !important; }
+  .twin, .twin body { overflow:hidden !important; }
+  /* el lienzo 3D se superpone a su recuadro: nunca lo agranda ni crea barras de desplazamiento */
+  #view > canvas { position:absolute; inset:0; }
   #left { display:flex; flex-direction:column; min-width:0; height:100vh; }
   #view { flex:1; min-height:0; }
   .chtoggle { position:absolute; right:12px; top:12px; z-index:2; }
@@ -1016,7 +1019,7 @@ if (TWIN) document.documentElement.classList.add('twin');
 const view = $('view');
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(TWIN ? Math.min(window.devicePixelRatio, 1.25) : window.devicePixelRatio);   // gemelo: mas liviano en el celular
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = !TWIN;   // gemelo: sin sombras (mucho mas liviano)
 view.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x111317);
@@ -1028,7 +1031,7 @@ if (TWIN) camera.position.set(250, -330, 230);   // en la app: de frente y de tr
 scene.add(new THREE.HemisphereLight(0xffffff, 0x303040, 0.85));
 const sun = new THREE.DirectionalLight(0xffffff, 0.75);
 sun.position.set(250, -300, 500);
-sun.castShadow = true;
+sun.castShadow = !TWIN;
 sun.shadow.mapSize.set(2048, 2048);
 Object.assign(sun.shadow.camera, { left: -400, right: 400, top: 400, bottom: -400, near: 10, far: 1500 });
 scene.add(sun);
@@ -2692,16 +2695,36 @@ buzzer.sing(11);
 Serial.println('Servidor HTTP iniciado (simulado)');
 
 
+let lastW = 0, lastH = 0;
 function resize() {
-  const w = view.clientWidth, h = view.clientHeight;
+  const r = view.getBoundingClientRect();
+  const w = Math.floor(r.width), h = Math.floor(r.height);   // hacia abajo: con escalado 125% no se pasa ni 1 px
+  if (!w || !h || (w === lastW && h === lastH)) return;      // oculto o sin cambios: nada que hacer (evita ciclos)
+  lastW = w; lastH = h;
   renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', resize);
 new ResizeObserver(resize).observe(view);
 resize();
 
+// Gemelo digital: si el contexto 3D se pierde (pasa en algunas tarjetas graficas) se recarga solo,
+// y cada segundo avisa a la app cuantos cuadros lleva (la app lo reinicia si se queda quieto).
+renderer.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); setTimeout(() => location.reload(), 500); });
+if (TWIN) {
+  $('showCom').checked = false;
+  setInterval(() => { try { parent.postMessage({ ottoTwinAlive: renderer.info.render.frame, ready: phys.ready }, '*'); } catch (e) {} }, 1000);
+}
+
 let last = performance.now();
+let loopErrors = 0;
 renderer.setAnimationLoop(now => {
+  try { loopStep(now); }
+  catch (err) {                                   // un error no congela el simulador
+    console.error('Simulador:', err);
+    if (TWIN && loopErrors++ % 120 === 0) try { parent.postMessage({ ottoTwinError: 'error: ' + err.message }, '*'); } catch (e) {}
+  }
+});
+function loopStep(now) {
   const dt = Math.min((now - last) / 1000, 0.05);
   last = now;
   processTask();                       // loop(): processTask()
@@ -2712,23 +2735,34 @@ renderer.setAnimationLoop(now => {
   for (const s of Object.values(S)) s.step(dt);
   stepPhysics(dt);
   drawPhysics();
-  drawSensor();
+  if (!TWIN || autoMode) drawSensor();   // gemelo: el rayo del sensor solo en modo automatico
+  usRayLine.visible = !TWIN || autoMode;
   followCamera();
   updateTable();
   if (!$('choreo').hidden) { renderPlayhead(); renderMovePlayhead(); }
   renderer.render(scene, camera);
-});
+}
 
 (async () => {
   try {
-    RAPIER = (await import(RAPIER_URL)).default;
-    await RAPIER.init();
+    // motor de fisica: CDN principal y, si falla o tarda, uno de respaldo
+    const sources = [RAPIER_URL, 'https://unpkg.com/@dimforge/rapier3d-compat@0.19.3/rapier.mjs'];
+    let lastErr = null;
+    for (const src of sources) {
+      try {
+        RAPIER = (await Promise.race([import(src), new Promise((_, rej) => setTimeout(() => rej(new Error('tiempo agotado')), 15000))])).default;
+        await RAPIER.init();
+        break;
+      } catch (err) { lastErr = err; RAPIER = null; Serial.println('Fisica: no cargo desde ' + src + ' (' + err.message + ')'); }
+    }
+    if (!RAPIER) throw lastErr;
     buildWorld();
     $('massInfo').textContent = 'Física: Rapier 0.19 · peso estimado ' + Math.round(phys.mass ? phys.mass * 1000 : 0) + ' g (piezas PLA ~25% relleno + 7 servos SG90 + ESP32 + batería 60 g).';
     stepPhysics(0); $('massInfo').textContent = 'Física: Rapier 0.19 · peso estimado ' + Math.round(phys.mass * 1000) + ' g (piezas PLA ~25% relleno + 7 servos SG90 + ESP32 + batería 60 g).';
     Serial.println('Motor de física listo');
   } catch (e) {
     Serial.println('No se pudo cargar el motor de física: ' + e.message);
+    if (TWIN) try { parent.postMessage({ ottoTwinError: 'sin física (¿sin internet?)' }, '*'); } catch (err) {}
   }
 })();
 </script>
